@@ -1,47 +1,34 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { IslamicModeProvider } from './context/IslamicModeContext';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout/Layout';
 
-// Import Semua Halaman
+// --- PAGES IMPORT ---
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import MateriReader from './pages/MateriReader';
+import Profile from './pages/Profile';
+import AdminPanel from './pages/AdminPanel';
+
+// Fitur Skill & Drill
 import OSCEStation from './pages/OSCEStation';
 import FlashcardDrill from './pages/FlashcardDrill';
-import Profile from './pages/Profile';
-import AdminPanel from './pages/AdminPanel'; // <--- IMPORT HALAMAN ADMIN
 
-// Komponen Placeholder (Untuk halaman yang belum ada)
-const ComingSoon = ({ title }) => (
-  <div className="flex flex-col items-center justify-center h-96 text-center text-slate-400 p-8">
-    <div className="bg-slate-800 p-4 rounded-full mb-4">
-      <span className="text-4xl">🚧</span>
-    </div>
-    <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-    <p>Fitur ini sedang dalam tahap pengembangan.</p>
-    <button
-      className="mt-6 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm transition-colors text-white"
-      onClick={() => window.history.back()}
-    >
-      Kembali
-    </button>
-  </div>
-);
+// Fitur CBT Center (New Structure)
+import CBTSelection from './pages/CBTSelection';   // Menu Pilih Sistem
+import MaterialViewer from './pages/MaterialViewer'; // Baca Materi
+import MateriReader from './pages/MateriReader';     // Latihan Soal (Quiz)
 
 function App() {
   return (
-    // 1. Provider Mode Islam (Paling Luar)
+    // 1. Provider Mode Islam (Global Context)
     <IslamicModeProvider>
-      {/* 2. Provider Auth (Pembungkus Login) */}
+      
+      {/* 2. Provider Auth (Pembungkus Login/Register) */}
       <AuthProvider>
+        
         <Router>
           <Routes>
             {/* =========================================
@@ -52,30 +39,41 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* =========================================
-                2. APP ROUTES (Halaman Dalam dengan Sidebar)
+                2. APP ROUTES (Halaman Dalam / Protected)
                ========================================= */}
             <Route path="/app" element={<Layout />}>
+              
               {/* Dashboard Utama */}
               <Route index element={<Dashboard />} />
-
-              {/* Fitur - Fitur Inti */}
-              <Route path="materi" element={<MateriReader />} />
+              
+              {/* --- CBT CENTER ROUTES (NEW) --- */}
+              {/* 1. Menu Utama CBT (Pilih Sistem) */}
+              <Route path="cbt" element={<CBTSelection />} />
+              {/* 2. Mode Baca Materi (High Yield) */}
+              <Route path="cbt/read" element={<MaterialViewer />} />
+              {/* 3. Mode Latihan Soal (Quiz) */}
+              <Route path="cbt/quiz" element={<MateriReader />} />
+              
+              {/* --- SKILL & DRILL ROUTES --- */}
               <Route path="osce" element={<OSCEStation />} />
               <Route path="flashcards" element={<FlashcardDrill />} />
-
-              {/* Fitur Profil */}
+              
+              {/* --- USER ROUTES --- */}
               <Route path="profile" element={<Profile />} />
 
-              {/* Fitur Admin (Akses Manual via URL /app/admin) */}
+              {/* --- ADMIN ROUTE --- */}
               <Route path="admin" element={<AdminPanel />} />
+              
             </Route>
 
             {/* =========================================
-                3. FALLBACK (Jika Link Salah)
+                3. FALLBACK (Jika Link Salah -> Ke Home)
                ========================================= */}
             <Route path="*" element={<Navigate to="/" replace />} />
+
           </Routes>
         </Router>
+
       </AuthProvider>
     </IslamicModeProvider>
   );
