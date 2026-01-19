@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Zap, BookOpen, Stethoscope, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+// Import kategori agar admin tidak salah ketik saat upload JSON
+import { EXAM_CATEGORIES } from '../data/categories';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('import'); 
@@ -20,15 +22,22 @@ export default function AdminPanel() {
         return `Format OSCE (Array):
 [
   {
-    "system": "Neurologi",
+    "system": "Neurologi", // <--- Harus sesuai daftar di atas
     "type": "checklist", // atau "case"
     "title": "Judul Materi",
-    "steps": [ { "text": "Langkah 1", "isCritical": true } ] // Jika checklist
-    // ... field lain jika type="case"
+    "steps": [ { "text": "Langkah 1", "isCritical": true } ]
   }
 ]`;
       }
-      return `Format Standar (Array): [ {"question": "...", "correctAnswer": "A"}, ... ]`;
+      return `Format Standar (Array): 
+[ 
+  {
+    "category": "Kardiovaskular", // <--- Harus sesuai daftar di atas
+    "question": "...", 
+    "correctAnswer": "A",
+    ...
+  } 
+]`;
     }
 
     const handleImport = async () => {
@@ -65,13 +74,35 @@ export default function AdminPanel() {
     return (
       <div className="space-y-6 animate-in fade-in">
         
-        {/* Banner Info */}
-        <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl flex gap-3 text-blue-300 text-sm">
-          <Info size={20} className="shrink-0" />
-          <div>
-            <p className="font-bold">Tips Upload Massal:</p>
-            <p>Gunakan AI (ChatGPT/Claude) untuk mengubah materi Word/PDF Anda menjadi format JSON Array sesuai target koleksi di bawah.</p>
+        {/* Banner Info & Cheat Sheet Kategori */}
+        <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl flex flex-col gap-4">
+          
+          {/* Info Utama */}
+          <div className="flex gap-3 text-blue-300 text-sm">
+            <Info size={20} className="shrink-0" />
+            <div>
+              <p className="font-bold">Tips Upload Massal:</p>
+              <p>Gunakan AI (ChatGPT/Claude) untuk mengubah materi Word/PDF Anda menjadi format JSON Array.</p>
+            </div>
           </div>
+
+          {/* DAFTAR KATEGORI VALID (Agar Admin Tidak Typo) */}
+          <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+            <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+              Daftar Kategori Valid (Klik & Copy ke JSON):
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {EXAM_CATEGORIES.map(cat => (
+                <span 
+                  key={cat.id} 
+                  className="text-[10px] px-2 py-1 bg-slate-800 rounded text-slate-300 border border-slate-700 select-all cursor-copy hover:border-blue-500 hover:text-white transition-colors"
+                >
+                  "{cat.label}"
+                </span>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         {/* Dropdown Target Koleksi */}
@@ -85,7 +116,7 @@ export default function AdminPanel() {
              >
                <option value="cbt_questions">1. Bank Soal (Latihan MCQ)</option>
                <option value="study_materials">2. Materi Belajar (High Yield)</option>
-               <option value="osce_materials">3. OSCE Center (Checklist & Kasus)</option> {/* <--- OPSI BARU */}
+               <option value="osce_materials">3. OSCE Center (Checklist & Kasus)</option>
                <option value="flashcards">4. Flashcards</option>
              </select>
           </div>
@@ -143,7 +174,6 @@ export default function AdminPanel() {
         >
           <Upload size={18} /> Bulk Import JSON
         </button>
-        {/* Tab lain bisa ditambahkan nanti jika butuh input manual */}
       </div>
 
       {/* Content Area */}

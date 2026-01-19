@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { IslamicModeProvider } from './context/IslamicModeContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout/Layout';
 
 // --- PAGES IMPORT ---
@@ -25,10 +26,10 @@ function App() {
   return (
     // 1. Provider Mode Islam (Global Context)
     <IslamicModeProvider>
-      
+      <ThemeProvider> {/* <--- Bungkus di sini */}
       {/* 2. Provider Auth (Pembungkus Login/Register) */}
       <AuthProvider>
-        
+
         <Router>
           <Routes>
             {/* =========================================
@@ -75,6 +76,7 @@ function App() {
         </Router>
 
       </AuthProvider>
+      </ThemeProvider>
     </IslamicModeProvider>
   );
 }
