@@ -1,13 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App' // Gunakan .tsx agar lebih eksplisit (opsional tapi recommended)
-import './index.css' // <--- WAJIB pakai .css jika ini file style
+import App from './App'
+import './index.css'
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
+// 1. Import Speed Insights
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
-// Tanda '!' di akhir menjamin element root tidak null (Sudah Benar)
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
+    {/* 2. Pasang Komponen di sini (Tidak akan terlihat di layar, cuma memantau di background) */}
+    <SpeedInsights />
   </React.StrictMode>,
 )
