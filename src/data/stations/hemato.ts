@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesHemato } from '../cases/hemato_cases';
 
 export const stationHemato: StationData = {
   id: "hemato",
@@ -40,5 +41,5 @@ export const stationHemato: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesHemato
 };

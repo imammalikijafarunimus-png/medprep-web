@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesPsikiatri } from '../cases/psikiatri_cases'; // Import
 
 export const stationPsikiatri: StationData = {
   id: "psikiatri",
@@ -40,5 +41,5 @@ export const stationPsikiatri: StationData = {
       }
     }
   ],
-  cases: []
+  cases: casesPsikiatri
 };

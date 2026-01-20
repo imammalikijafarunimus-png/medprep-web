@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesKardio } from '../cases/kardiovaskular_cases';
 
 export const stationKardio: StationData = {
   id: "kardiovaskular",
@@ -35,5 +36,5 @@ export const stationKardio: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesKardio
 };

@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesGadar } from '../cases/gadar_cases';
 
 export const stationGadar: StationData = {
   id: "gadar",
@@ -92,5 +93,5 @@ export const stationGadar: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesGadar
 };

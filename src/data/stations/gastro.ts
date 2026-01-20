@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesGastro } from '../cases/gastro_cases';
 
 export const stationGastro: StationData = {
   id: "gastro",
@@ -38,5 +39,5 @@ export const stationGastro: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesGastro
 };

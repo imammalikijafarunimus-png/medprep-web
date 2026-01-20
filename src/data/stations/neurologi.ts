@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesNeurologi } from '../cases/neurologi_cases';
 
 export const stationNeurologi: StationData = {
   id: "neurologi",
@@ -47,5 +48,5 @@ export const stationNeurologi: StationData = {
       ]
     }
   ],
-  cases: [] // Nanti diisi kasus neurologi
+  cases: casesNeurologi
 };

@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesReproduksi } from '../cases/reproduksi_cases';
 
 export const stationReproduksi: StationData = {
   id: "reproduksi",
@@ -63,5 +64,5 @@ export const stationReproduksi: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesReproduksi
 };

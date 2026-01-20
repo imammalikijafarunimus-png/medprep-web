@@ -1,252 +1,272 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Zap, RotateCw, Check, X, ChevronRight, 
-  ArrowLeft, Brain, Pill, Activity, Sparkles, Filter 
-} from 'lucide-react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useIslamicMode } from '../context/IslamicModeContext';
+import { ChevronLeft, ChevronRight, RotateCw, BookOpen, Brain, Beaker, Activity, Heart, Shuffle, Zap, XCircle, CheckCircle, Clock } from 'lucide-react';
+import { FLASHCARDS } from '../data/flashcard_data';
 
-// --- TIPE DATA ---
-interface Flashcard {
+// --- TIPE DATA PROGRES (DISIMPAN DI LOCALSTORAGE) ---
+interface CardProgress {
   id: string;
-  front: string; // Pertanyaan / Istilah
-  back: string;  // Jawaban / Definisi
-  category: 'Farmako' | 'Lab' | 'Klinis' | 'Fiqih' | 'Lainnya';
-  system?: string; // Opsional: Kardio, Neuro, dll
+  interval: number; // Jarak hari untuk review berikutnya
+  nextReview: number; // Timestamp kapan harus muncul lagi
+  status: 'new' | 'learning' | 'review';
 }
 
 const CATEGORIES = [
-  { id: 'All', label: 'Semua', icon: Zap },
-  { id: 'Farmako', label: 'Farmako & Dosis', icon: Pill },
-  { id: 'Lab', label: 'Nilai Lab', icon: Activity },
-  { id: 'Klinis', label: 'Tanda Klinis', icon: Brain },
-  { id: 'Fiqih', label: 'Hafalan Doa', icon: Sparkles },
+  { id: 'all', label: 'Semua', icon: Shuffle },
+  { id: 'farmako', label: 'Farmako & Dosis', icon: BookOpen },
+  { id: 'lab', label: 'Nilai Lab', icon: Beaker },
+  { id: 'klinis', label: 'Tanda Klinis', icon: Activity },
+  { id: 'doa', label: 'Hafalan Doa', icon: Heart },
 ];
 
 export default function FlashcardDrill() {
-  const { isIslamicMode } = useIslamicMode();
-  
-  // State Data
-  const [cards, setCards] = useState<Flashcard[]>([]);
-  const [filteredCards, setFilteredCards] = useState<Flashcard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-
-  // State Drill
+  const [activeCategory, setActiveCategory] = useState('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [score, setScore] = useState({ remembered: 0, forgot: 0 });
-  const [isFinished, setIsFinished] = useState(false);
+  
+  // State untuk menyimpan progress hafalan Dokter
+  const [progressData, setProgressData] = useState<{[key:string]: CardProgress}>({});
 
-  // 1. Fetch Data
+  // 1. LOAD PROGRESS DARI LOCAL STORAGE SAAT MULAI
   useEffect(() => {
-    const fetchCards = async () => {
-      setLoading(true);
-      try {
-        const snapshot = await getDocs(collection(db, "flashcards"));
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Flashcard[];
-        
-        // DUMMY DATA (Jika kosong)
-        if (data.length === 0) {
-          const dummy: Flashcard[] = [
-            { id: '1', category: 'Farmako', front: 'Dosis Paracetamol Anak', back: '10-15 mg/kgBB/kali, tiap 4-6 jam (Maks 5x/hari)' },
-            { id: '2', category: 'Farmako', front: 'Dosis Adrenalin Syok Anafilaktik (Dewasa)', back: '0.3 - 0.5 mg IM (1:1000). Ulangi tiap 5-15 menit.' },
-            { id: '3', category: 'Lab', front: 'Nilai Normal Kalium (K+)', back: '3.5 - 5.0 mEq/L' },
-            { id: '4', category: 'Klinis', front: 'Murphy Sign (+)', back: 'Nyeri tekan perut kanan atas saat inspirasi dalam -> Kolesistitis Akut' },
-            { id: '5', category: 'Fiqih', front: 'Doa Menjenguk Orang Sakit', back: 'Laa ba\'sa thahuurun insyaa Allah (Tidak mengapa, semoga sakitmu ini menjadi pembersih dosa)' },
-            { id: '6', category: 'Klinis', front: 'Trias Cushing (TIK Meningkat)', back: '1. Hipertensi (Sistolik naik)\n2. Bradikardia\n3. Napas ireguler' },
-          ];
-          setCards(dummy);
-        } else {
-          setCards(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCards();
+    const saved = localStorage.getItem('medprep_flashcard_progress');
+    if (saved) {
+      setProgressData(JSON.parse(saved));
+    }
   }, []);
 
-  // 2. Filter Logic
-  useEffect(() => {
-    let result = cards;
-    if (selectedCategory !== 'All') {
-      result = cards.filter(c => c.category === selectedCategory);
-    }
-    // Shuffle Array (Biar urutan soal acak setiap kali buka)
-    result = result.sort(() => Math.random() - 0.5);
-    setFilteredCards(result);
-    setCurrentIndex(0);
-    setIsFinished(false);
-    setScore({ remembered: 0, forgot: 0 });
-    setIsFlipped(false);
-  }, [selectedCategory, cards]);
-
-  // --- HANDLERS ---
-  const handleNext = (remembered: boolean) => {
-    setScore(prev => ({
-      remembered: remembered ? prev.remembered + 1 : prev.remembered,
-      forgot: remembered ? prev.forgot : prev.forgot + 1
-    }));
-
-    setIsFlipped(false);
+  // 2. FILTER & SORTING KARTU (LOGIKA SRS)
+  // Kartu yang "Due" (Jatuh Tempo) atau "Belum Pernah Dilihat" akan muncul duluan
+  const getFilteredCards = () => {
+    let cards = activeCategory === 'all' 
+      ? FLASHCARDS 
+      : FLASHCARDS.filter(card => card.category === activeCategory);
     
-    // Delay sedikit biar kartu tertutup dulu baru ganti soal
+    const now = Date.now();
+
+    // Sort: Prioritaskan yang (1) Belum pernah dibuka, (2) Sudah waktunya review (Lupa/Jatuh tempo)
+    return cards.sort((a, b) => {
+      const progA = progressData[a.id];
+      const progB = progressData[b.id];
+
+      // Kalau belum ada data, anggap prioritas tinggi
+      if (!progA) return -1;
+      if (!progB) return 1;
+
+      // Kalau sudah ada data, urutkan berdasarkan waktu review
+      return progA.nextReview - progB.nextReview;
+    });
+  };
+
+  const filteredCards = getFilteredCards();
+  const currentCard = filteredCards[currentIndex];
+  const cardProgress = progressData[currentCard?.id];
+
+  // Reset saat ganti kategori
+  useEffect(() => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+  }, [activeCategory]);
+
+  // --- LOGIKA EVALUASI (SRS ALGORITHM SEDERHANA) ---
+  const handleEvaluation = (result: 'forgot' | 'remember') => {
+    const now = Date.now();
+    let newInterval = 1; // Default 1 hari
+    let nextDate = now;
+
+    if (result === 'forgot') {
+      // JIKA LUPA/SALAH:
+      // Reset interval, muncul lagi dalam 1 menit (logika antrian) atau besok
+      newInterval = 0; 
+      nextDate = now + 60000; // Muncul 1 menit lagi (dianggap 'Learning')
+    } else {
+      // JIKA INGAT/BENAR:
+      // Interval dikali 2 (Spaced Repetition: 1 hari -> 2 hari -> 4 hari -> dst)
+      const currentInterval = cardProgress?.interval || 1;
+      newInterval = currentInterval * 2; 
+      // Hitung tanggal berikutnya (Hari * 24jam * 60mnt * 60dtk * 1000ms)
+      nextDate = now + (newInterval * 24 * 60 * 60 * 1000);
+    }
+
+    // Update State
+    const newProgress = {
+      ...progressData,
+      [currentCard.id]: {
+        id: currentCard.id,
+        interval: newInterval,
+        nextReview: nextDate,
+        status: result === 'forgot' ? 'learning' : 'review'
+      } as CardProgress
+    };
+
+    setProgressData(newProgress);
+    localStorage.setItem('medprep_flashcard_progress', JSON.stringify(newProgress));
+
+    // Pindah ke kartu berikutnya otomatis agar flow cepat
+    setIsFlipped(false);
     setTimeout(() => {
-      if (currentIndex < filteredCards.length - 1) {
-        setCurrentIndex(prev => prev + 1);
-      } else {
-        setIsFinished(true);
-      }
+       // Pindah ke kartu berikutnya (looping)
+       setCurrentIndex((prev) => (prev + 1) % filteredCards.length);
     }, 200);
   };
 
-  const restartDrill = () => {
-    const shuffled = [...filteredCards].sort(() => Math.random() - 0.5);
-    setFilteredCards(shuffled);
-    setCurrentIndex(0);
-    setIsFinished(false);
-    setScore({ remembered: 0, forgot: 0 });
+  // Navigasi Manual (Tetap ada jika ingin skip)
+  const handleNext = () => {
     setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev + 1) % filteredCards.length), 200);
   };
 
-  if (loading) return <div className="text-center p-10 animate-pulse text-slate-500">Menyiapkan Kartu Hafalan...</div>;
+  const handlePrev = () => {
+    setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length), 200);
+  };
+
+  // Helper untuk menampilkan status waktu
+  const getReviewText = () => {
+    if (!cardProgress) return "Baru";
+    const now = Date.now();
+    if (cardProgress.nextReview < now) return "Due (Waktunya Review)";
+    
+    const daysLeft = Math.ceil((cardProgress.nextReview - now) / (1000 * 60 * 60 * 24));
+    return `Review: ${daysLeft} hari lagi`;
+  };
 
   return (
-    <div className="max-w-4xl mx-auto pb-10">
+    <div className="p-6 pb-24 animate-in fade-in max-w-4xl mx-auto">
       
-      {/* HEADER & FILTER */}
-      <div className="mb-8 animate-in slide-in-from-top duration-500">
-        <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <Zap className="text-amber-400" fill="currentColor" /> Flashcard Drill
+      {/* HEADER */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2 flex items-center justify-center gap-2">
+          {/* ICON KEMBALI JADI PETIR (ZAP) */}
+          <Zap className="text-yellow-500 fill-yellow-500" /> Flashcard Drill
         </h1>
-        <p className="text-slate-400 text-sm mb-6">Metode "Active Recall" untuk menghafal dosis, nilai lab, dan poin penting.</p>
-        
-        {/* Category Pills */}
-        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap border ${
-                selectedCategory === cat.id 
-                ? 'bg-amber-500 text-black border-amber-500' 
-                : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
-              }`}
-            >
-              <cat.icon size={16} /> {cat.label}
-            </button>
-          ))}
-        </div>
+        <p className="text-slate-500 dark:text-slate-400">Metode Active Recall & Spaced Repetition.</p>
       </div>
 
-      {/* CONTENT AREA */}
-      {filteredCards.length === 0 ? (
-        <div className="text-center p-12 border border-dashed border-slate-800 rounded-2xl text-slate-500">
-          Tidak ada kartu di kategori ini.
-        </div>
-      ) : isFinished ? (
-        // --- RESULT SCREEN ---
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 text-center animate-in zoom-in duration-300">
-          <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-400">
-            <Zap size={40} />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Sesi Selesai!</h2>
-          <p className="text-slate-400 mb-8">Kamu telah mereview {filteredCards.length} kartu.</p>
-          
-          <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-8">
-            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
-              <p className="text-2xl font-bold text-emerald-400">{score.remembered}</p>
-              <p className="text-xs text-emerald-500/70 uppercase font-bold">Ingat</p>
-            </div>
-            <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
-              <p className="text-2xl font-bold text-red-400">{score.forgot}</p>
-              <p className="text-xs text-red-500/70 uppercase font-bold">Lupa</p>
-            </div>
-          </div>
+      {/* TABS */}
+      <div className="flex overflow-x-auto gap-3 pb-4 mb-6 custom-scrollbar justify-start md:justify-center">
+        {CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          const isActive = activeCategory === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                isActive 
+                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30' 
+                  : 'bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-teal-500'
+              }`}
+            >
+              <Icon size={16} /> {cat.label}
+            </button>
+          );
+        })}
+      </div>
 
-          <button 
-            onClick={restartDrill}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all"
-          >
-            Ulangi Latihan
-          </button>
+      {/* AREA KARTU */}
+      {filteredCards.length > 0 ? (
+        <div className="relative h-[450px] w-full cursor-pointer group [perspective:1000px]">
+          
+          <div className={`relative w-full h-full duration-500 [transform-style:preserve-3d] transition-all ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+            
+            {/* SISI DEPAN (PERTANYAAN) */}
+            <div 
+              onClick={() => setIsFlipped(true)}
+              className="absolute w-full h-full [backface-visibility:hidden] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-xl hover:border-teal-400 transition-colors"
+            >
+              <div className="absolute top-6 left-6 flex gap-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                  #{currentIndex + 1}
+                </span>
+                {/* Badge Status Review */}
+                <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 ${!cardProgress || cardProgress.nextReview < Date.now() ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                  <Clock size={12} /> {getReviewText()}
+                </span>
+              </div>
+
+              {/* ICON PETIR DI TENGAH KARTU */}
+              <div className="w-24 h-24 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-500 rounded-full flex items-center justify-center mb-8 animate-pulse">
+                <Zap size={48} fill="currentColor" />
+              </div>
+
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white leading-tight mb-4">
+                {currentCard.question}
+              </h3>
+              
+              <div className="absolute bottom-8 flex flex-col items-center gap-2">
+                <span className="text-teal-500 text-sm font-bold flex items-center gap-2 bg-teal-50 dark:bg-teal-900/30 px-4 py-2 rounded-full">
+                  <RotateCw size={14} /> Klik kartu untuk lihat jawaban
+                </span>
+              </div>
+            </div>
+
+            {/* SISI BELAKANG (JAWABAN & EVALUASI) */}
+            <div className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-slate-800 text-white rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-xl ring-4 ring-slate-700">
+               
+               {/* KONTEN JAWABAN */}
+               <div className="flex-1 flex flex-col justify-center w-full">
+                  <span className="text-xs font-bold uppercase tracking-widest text-teal-400 mb-2">Jawaban</span>
+                  <h3 className="text-xl md:text-2xl font-bold leading-relaxed mb-6">
+                    {currentCard.answer}
+                  </h3>
+                  
+                  {currentCard.mnemonics && (
+                    <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600 mx-auto w-full max-w-md">
+                      <p className="text-sm font-bold text-yellow-400 flex items-center gap-2 justify-center mb-1">
+                        <Brain size={14} /> Jembatan Keledai:
+                      </p>
+                      <p className="text-sm italic text-slate-200">"{currentCard.mnemonics}"</p>
+                    </div>
+                  )}
+               </div>
+
+               {/* TOMBOL EVALUASI (PENTING) */}
+               <div className="w-full pt-4 border-t border-slate-600">
+                  <p className="text-xs text-slate-400 mb-3 font-bold uppercase">Bagaimana ingatan Anda?</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleEvaluation('forgot'); }}
+                      className="flex flex-col items-center justify-center gap-1 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/50 py-3 rounded-xl transition-all group"
+                    >
+                      <XCircle size={24} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold">Lupa / Salah</span>
+                      <span className="text-[10px] opacity-70">&lt; 1 mnt</span>
+                    </button>
+
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleEvaluation('remember'); }}
+                      className="flex flex-col items-center justify-center gap-1 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white border border-green-500/50 py-3 rounded-xl transition-all group"
+                    >
+                      <CheckCircle size={24} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold">Ingat / Benar</span>
+                      <span className="text-[10px] opacity-70">3 hari</span>
+                    </button>
+                  </div>
+               </div>
+            </div>
+
+          </div>
         </div>
       ) : (
-        // --- CARD DRILL ---
-        <div className="animate-in fade-in duration-500">
-          
-          {/* Progress Bar */}
-          <div className="flex justify-between text-xs text-slate-500 mb-2 font-bold uppercase tracking-wider">
-            <span>Kartu {currentIndex + 1} dari {filteredCards.length}</span>
-            <span>{filteredCards[currentIndex].category}</span>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mb-6">
-            <div 
-              className="bg-amber-400 h-1.5 rounded-full transition-all duration-300" 
-              style={{ width: `${((currentIndex + 1) / filteredCards.length) * 100}%` }}
-            ></div>
-          </div>
-
-          {/* THE CARD (Perspective 3D) */}
-          <div 
-            className="relative w-full h-80 cursor-pointer perspective-1000 group"
-            onClick={() => setIsFlipped(!isFlipped)}
-          >
-            <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-              
-              {/* FRONT (Pertanyaan) */}
-              <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-3xl flex flex-col items-center justify-center p-8 shadow-2xl text-center">
-                <span className="text-amber-500 text-xs font-bold uppercase mb-4 tracking-widest border border-amber-500/30 px-2 py-1 rounded">
-                  {filteredCards[currentIndex].category}
-                </span>
-                <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                  {filteredCards[currentIndex].front}
-                </h3>
-                <p className="text-slate-500 text-xs mt-6 animate-pulse">Ketuk untuk balik kartu</p>
-              </div>
-
-              {/* BACK (Jawaban) */}
-              <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-blue-900 to-slate-900 border border-blue-500/30 rounded-3xl flex flex-col items-center justify-center p-8 shadow-2xl text-center">
-                <h3 className="text-xl md:text-2xl font-medium text-blue-100 leading-relaxed whitespace-pre-line">
-                  {filteredCards[currentIndex].back}
-                </h3>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Action Buttons (Muncul setelah dibalik) */}
-          <div className={`flex gap-4 mt-8 transition-all duration-300 ${isFlipped ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-            <button 
-              onClick={() => handleNext(false)}
-              className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-red-400 rounded-2xl font-bold flex flex-col items-center gap-1 transition-all"
-            >
-              <X size={24} />
-              <span className="text-xs uppercase">Lupa / Salah</span>
-            </button>
-            <button 
-              onClick={() => handleNext(true)}
-              className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold flex flex-col items-center gap-1 shadow-lg shadow-emerald-500/20 transition-all"
-            >
-              <Check size={24} />
-              <span className="text-xs uppercase">Ingat / Benar</span>
-            </button>
-          </div>
-
+        // JIKA KOSONG
+        <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+          <Zap size={48} className="mb-4 opacity-50" />
+          <p>Semua kartu di kategori ini sudah dikuasai!</p>
+          <button onClick={() => { localStorage.removeItem('medprep_flashcard_progress'); window.location.reload(); }} className="mt-4 text-xs text-teal-500 hover:underline">
+            Reset Progress
+          </button>
         </div>
       )}
-      
-      {/* Tambahkan CSS inline untuk efek 3D flip */}
-      <style>{`
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-      `}</style>
+
+      {/* CONTROLS (Hanya muncul jika BELUM dibalik / Sisi Depan) */}
+      {!isFlipped && filteredCards.length > 0 && (
+        <div className="flex items-center justify-center gap-6 mt-8 opacity-50 hover:opacity-100 transition-opacity">
+          <button onClick={handlePrev} className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><ChevronLeft /></button>
+          <span className="text-xs text-slate-400 font-mono">{currentIndex + 1} / {filteredCards.length}</span>
+          <button onClick={handleNext} className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><ChevronRight /></button>
+        </div>
+      )}
+
     </div>
   );
 }

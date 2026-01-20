@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesUrogenital } from '../cases/urogenital_cases'; // <--- Import ini
 
 export const stationUrogenital: StationData = {
   id: "urogenital",
@@ -37,5 +38,5 @@ export const stationUrogenital: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesUrogenital // <--- Masukkan di sini]
 };

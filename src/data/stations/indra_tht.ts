@@ -1,4 +1,5 @@
-import { StationData } from '../osce_data';
+import type { StationData } from '../osce_data';
+import { casesTHT } from '../cases/indra_tht_cases';
 
 export const stationTHT: StationData = {
   id: "indra_tht", // ID sementara, tidak dipakai di menu utama
@@ -43,5 +44,5 @@ export const stationTHT: StationData = {
       ]
     }
   ],
-  cases: []
+  cases: casesTHT
 };

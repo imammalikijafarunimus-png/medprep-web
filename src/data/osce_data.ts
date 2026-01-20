@@ -63,22 +63,31 @@ export type OSCESection =
   | SectionPsychiatryStatus 
   | SectionChecklist;
 
-export interface CaseStudy {
-  id: string;
-  title: string;
-  frequency: number;
-  tags: string[];
-  summary: string;
-  content: {
-    definition: string;
-    etiology: string[];
-    riskFactors?: string[];
-    anamnesis: { symptoms: string[]; negatives?: string[] };
-    physicalExam: string[];
-    diagnosis: { lab?: string; goldStandard: string };
-    treatment: { pharm: string[]; nonPharm?: string[] };
-    osceTip: string;
-  };
+  export interface CaseStudy {
+   id: string;
+   title: string;
+   system: string; // Misal: Urogenital
+   level_skdi: string; // Misal: 4A, 3B
+   frequency: number; // 1-5 Bintang (Sesuai frekuensi kasus)
+   summary: string; // Deskripsi singkat untuk preview
+   content: {
+     anamnesis: {
+       keluhan_utama: string;
+       list_pertanyaan: string[]; // Poin-poin anamnesis penting
+     };
+     pemeriksaan_fisik: string[]; // Temuan positif (e.g., Nyeri Ketok CVA +)
+     diagnosis: {
+       working_diagnosis: string;
+       differential_diagnosis: string[];
+       penunjang: string[]; // Lab, Radiologi
+       gold_standard: string;
+     };
+     tatalaksana: {
+       farmakologi: string[]; // Isi Resep (R/ ...)
+       non_farmakologi: string[]; // Edukasi
+     };
+     osce_tip: string; // Notes OSCE dari file Word
+   };
 }
 
 export interface StationData {
