@@ -1,94 +1,96 @@
+import { Brain, Heart, BookOpen, Activity, Beaker, Shuffle } from 'lucide-react';
+
+// 1. UPDATE INTERFACE (Agar tidak merah)
 export interface Flashcard {
-    id: string;
-    category: 'farmako' | 'lab' | 'klinis' | 'doa' | 'umum';
-    question: string;
-    answer: string;
-    mnemonics?: string; // Jembatan keledai (Opsional)
+  id: string;
+  category: 'farmako' | 'lab' | 'klinis' | 'doa';
+  question: string;
+  answer: string;
+  mnemonics?: string; // Jembatan keledai (opsional)
+  type?: 'free' | 'premium'; // <--- TAMBAHAN PENTING
+}
+
+// 2. DATA FLASHCARD (Contoh dengan Label Premium)
+export const FLASHCARDS: Flashcard[] = [
+  // --- FARMAKOLOGI ---
+  {
+    id: 'f1',
+    category: 'farmako',
+    question: 'Dosis Paracetamol untuk anak (rumus umum)?',
+    answer: '10-15 mg/kgBB/kali, diberikan tiap 4-6 jam (maksimal 5x sehari).',
+    mnemonics: 'Ingat "10-15" untuk demam anak.',
+    type: 'free' // GRATIS
+  },
+  {
+    id: 'f2',
+    category: 'farmako',
+    question: 'Antidotum keracunan Organofosfat?',
+    answer: 'Sulfas Atropin (SA) sampai tanda atropinisasi muncul.',
+    type: 'free'
+  },
+  {
+    id: 'f3',
+    category: 'farmako',
+    question: 'Terapi Eradikasi H. pylori (Triple Therapy)?',
+    answer: 'PPI (2x1) + Amoxicillin (2x1000mg) + Clarithromycin (2x500mg) selama 14 hari.',
+    mnemonics: 'PAC: P-PI, A-mox, C-larithro',
+    type: 'premium' // BERBAYAR
+  },
+
+  // --- NILAI LAB ---
+  {
+    id: 'l1',
+    category: 'lab',
+    question: 'Nilai normal Trombosit?',
+    answer: '150.000 - 450.000 /µL',
+    type: 'free'
+  },
+  {
+    id: 'l2',
+    category: 'lab',
+    question: 'Kriteria Anemia menurut WHO untuk Laki-laki dewasa?',
+    answer: 'Hb < 13 g/dL',
+    type: 'free'
+  },
+  {
+    id: 'l3',
+    category: 'lab',
+    question: 'Interpretasi Analisa Gas Darah: pH 7.25, pCO2 60, HCO3 26?',
+    answer: 'Asidosis Respiratorik (pH rendah, pCO2 tinggi, HCO3 normal/kompensasi awal).',
+    type: 'premium' // BERBAYAR
+  },
+
+  // --- TANDA KLINIS ---
+  {
+    id: 'k1',
+    category: 'klinis',
+    question: 'Tanda khas pada Inspeksi pasien PPOK (Emfisema)?',
+    answer: 'Barrel Chest (Dada tong) & Pursed-lip breathing.',
+    type: 'free'
+  },
+  {
+    id: 'k2',
+    category: 'klinis',
+    question: 'Trias Cushing (TIK Meningkat)?',
+    answer: '1. Hipertensi (Sistolik naik)\n2. Bradikardia\n3. Napas Irreguler',
+    mnemonics: 'Kebalikan Syok (Hipotensi + Takikardi)',
+    type: 'premium' // BERBAYAR
+  },
+
+  // --- DOA DOKTER ---
+  {
+    id: 'd1',
+    category: 'doa',
+    question: 'Doa menjenguk orang sakit?',
+    answer: 'Allahumma rabban-nasi adzhibil-ba’sa, isyfi antasy-syafi, la syifa’a illa syifa’uka, syifa’an la yughadiru saqaman.',
+    mnemonics: 'Ya Allah hilangkanlah penyakitnya, sembuhkanlah...',
+    type: 'free'
+  },
+  {
+    id: 'd2',
+    category: 'doa',
+    question: 'Doa ketika minum obat?',
+    answer: 'Bismillah, asy-syafi huwallah. (Dengan nama Allah, Yang Maha Menyembuhkan adalah Allah).',
+    type: 'free'
   }
-  
-  export const FLASHCARDS: Flashcard[] = [
-    // --- KATEGORI: HAFALAN DOA (ISLAMIC) ---
-    {
-      id: 'doa_makan',
-      category: 'doa',
-      question: 'Doa Sebelum Makan & Minum',
-      answer: 'Allahumma baarik lanaa fiimaa rozaqtanaa wa qinaa adzaaban naar. (Ya Allah, berkahilah kami dalam rezeki yang telah Engkau berikan kepada kami dan peliharalah kami dari siksa api neraka)',
-      mnemonics: 'Ingat "Barik lana" (berkahi kami)'
-    },
-    {
-      id: 'doa_obat',
-      category: 'doa',
-      question: 'Doa Minum Obat (Syifa)',
-      answer: 'Allahumma Rabban-nasi, adzhibil-ba’sa, isyfi antas-syafi, la syifa’a illa syifa’uka, syifa’an la yughadiru saqaman. (Ya Allah Tuhan manusia, hilangkanlah penyakit, sembuhkanlah karena Engkaulah Penyembuh...)',
-    },
-    {
-      id: 'doa_pasien',
-      category: 'doa',
-      question: 'Doa Menjenguk Orang Sakit',
-      answer: 'La ba\'sa thahurun insya Allah. (Tidak mengapa, semoga sakitmu ini membuat dosamu bersih, Insya Allah)',
-    },
-  
-    // --- KATEGORI: FARMAKO & DOSIS ---
-    {
-      id: 'farm_pct_anak',
-      category: 'farmako',
-      question: 'Dosis Paracetamol Anak',
-      answer: '10 - 15 mg/kgBB/kali pemberian. (Maksimal 4-5 kali sehari).',
-      mnemonics: 'Ingat angka 10-15 (umur anak SMP)'
-    },
-    {
-      id: 'farm_adrenaline',
-      category: 'farmako',
-      question: 'Dosis Adrenalin Syok Anafilaktik (Dewasa)',
-      answer: '0.3 - 0.5 mg (ml) IM (Intramuskular). Larutan 1:1000.',
-      mnemonics: 'Ingat "Setengah ampul" paha luar'
-    },
-    {
-      id: 'farm_tb_anak',
-      category: 'farmako',
-      question: 'Dosis INH (Isoniazid) TB Anak',
-      answer: '10 mg/kgBB (Range 7-15 mg). Maksimal 300 mg/hari.',
-    },
-  
-    // --- KATEGORI: NILAI LAB ---
-    {
-      id: 'lab_hb',
-      category: 'lab',
-      question: 'Nilai Normal Hemoglobin (Hb) Dewasa',
-      answer: 'Pria: 13 - 17 g/dL\nWanita: 12 - 15 g/dL\nIbu Hamil: > 11 g/dL',
-    },
-    {
-      id: 'lab_gula',
-      category: 'lab',
-      question: 'Kriteria Diagnosis Diabetes (GDP & GDS)',
-      answer: 'GDP ≥ 126 mg/dL\nGDS ≥ 200 mg/dL + Gejala Klasik',
-    },
-    {
-      id: 'lab_trombosit',
-      category: 'lab',
-      question: 'Nilai Normal Trombosit',
-      answer: '150.000 - 450.000 /µL',
-      mnemonics: 'Di bawah 150rb = Trombositopenia (Dengue?)'
-    },
-  
-    // --- KATEGORI: TANDA KLINIS ---
-    {
-      id: 'klinis_murphy',
-      category: 'klinis',
-      question: 'Murphy Sign (+)',
-      answer: 'Nyeri tekan perut kanan atas saat inspirasi dalam. Khas untuk Kolesistitis Akut.',
-    },
-    {
-      id: 'klinis_brudzinski',
-      category: 'klinis',
-      question: 'Brudzinski I (Tanda Rangsang Meningeal)',
-      answer: 'Saat leher difleksikan, lutut dan panggul ikut fleksi secara otomatis.',
-      mnemonics: 'Leher tekuk -> Kaki ikut nekuk'
-    },
-    {
-      id: 'klinis_mcburney',
-      category: 'klinis',
-      question: 'McBurney Point',
-      answer: 'Titik 1/3 lateral garis imajiner dari SIAS ke Umbilikus. Nyeri tekan = Appendicitis.',
-    }
-  ];
+];

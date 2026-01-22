@@ -23,6 +23,7 @@ import OSCEStation from './pages/OSCEStation';
 import FlashcardDrill from './pages/FlashcardDrill';
 import UserProfile from './pages/Profile';
 import AdminDashboard from './pages/AdminPanel';
+import Subscription from './pages/Subscription';
 
 function App() {
   return (
@@ -57,6 +58,9 @@ function App() {
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="admin" element={<AdminDashboard />} />
                 
+                {/* Subscription Routes */}
+                <Route path="subscription" element={<Subscription />} />
+
               </Route>
 
               {/* 3. FALLBACK */}

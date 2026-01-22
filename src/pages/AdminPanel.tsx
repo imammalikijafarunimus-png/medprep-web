@@ -3,14 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { isAdmin } from '../config/admin_list';
 import { 
   LayoutDashboard, Trash2, FileText, 
-  HelpCircle, BookOpen, PenTool, Upload, FileJson, ShieldAlert, AlertTriangle, Sparkles
+  HelpCircle, BookOpen, PenTool, Upload, FileJson, ShieldAlert, AlertTriangle, Sparkles, Code, Lock, Unlock
 } from 'lucide-react';
-import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { SYSTEM_LIST } from '../data/osce_data';
-import toast from 'react-hot-toast'; // <--- IMPORT TOAST
+import toast from 'react-hot-toast'; 
 
-// --- TIPE DATA ---
 interface CBTQuestion {
   id?: string;
   system: string;
@@ -19,6 +18,7 @@ interface CBTQuestion {
   correctAnswer: 'a' | 'b' | 'c' | 'd' | 'e';
   explanation: string;
   insight?: string;
+  type?: 'free' | 'premium'; // Tipe Data
   createdAt?: any;
 }
 
@@ -29,29 +29,30 @@ interface CBTMaterial {
   content: string;    
   category?: string;
   insight?: string;
+  type?: 'free' | 'premium'; // Tipe Data
   createdAt?: any;
 }
 
 export default function AdminDashboard() {
   const { currentUser } = useAuth();
 
-  // STATE
   const [activeSection, setActiveSection] = useState<'soal' | 'materi'>('soal'); 
   const [activeTab, setActiveTab] = useState<'input' | 'list' | 'import'>('input');
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [jsonTextInput, setJsonTextInput] = useState('');
   
   const [questions, setQuestions] = useState<CBTQuestion[]>([]);
   const [materials, setMaterials] = useState<CBTMaterial[]>([]);
   
-  // FORM STATES
   const [formSoal, setFormSoal] = useState<CBTQuestion>({
     system: 'Respirasi',
     question: '',
     options: { a: '', b: '', c: '', d: '', e: '' },
     correctAnswer: 'a',
     explanation: '',
-    insight: ''
+    insight: '',
+    type: 'free' // Default Free
   });
 
   const [formMateri, setFormMateri] = useState<CBTMaterial>({
@@ -59,10 +60,10 @@ export default function AdminDashboard() {
     title: '',
     content: '',
     category: 'High Yield',
-    insight: ''
+    insight: '',
+    type: 'free' // Default Free
   });
 
-  // PROTEKSI
   if (!isAdmin(currentUser?.email)) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center">
@@ -73,52 +74,32 @@ export default function AdminDashboard() {
     );
   }
 
-  // --- CRUD LOGIC ---
   const handleSimpanSoal = async (e: React.FormEvent) => {
     e.preventDefault(); 
+    if (!formSoal.question || !formSoal.options.a) { toast.error("Data tidak lengkap"); return; }
     
-    // Validasi
-    if (!formSoal.question || !formSoal.options.a) {
-      toast.error("Lengkapi pertanyaan dan opsi jawaban!");
-      return;
-    }
-
     setLoading(true);
-    const loadingToast = toast.loading('Menyimpan soal...'); // Loading Toast
-
+    const toastId = toast.loading("Menyimpan...");
     try {
       await addDoc(collection(db, "cbt_questions"), { ...formSoal, createdAt: serverTimestamp() });
-      
-      toast.success("Soal berhasil disimpan!", { id: loadingToast }); // Update jadi sukses
-      
+      toast.success("Berhasil disimpan!", { id: toastId });
+      // Reset Form
       setFormSoal({ ...formSoal, question: '', options: { a: '', b: '', c: '', d: '', e: '' }, explanation: '', insight: '' });
-    } catch (error) { 
-      console.error(error); 
-      toast.error("Gagal menyimpan soal.", { id: loadingToast });
-    } finally { setLoading(false); }
+    } catch (error) { toast.error("Gagal simpan", { id: toastId }); } finally { setLoading(false); }
   };
 
   const handleSimpanMateri = async (e: React.FormEvent) => {
     e.preventDefault(); 
-    
-    if (!formMateri.title || !formMateri.content) {
-      toast.error("Judul dan Isi Materi wajib diisi!");
-      return;
-    }
+    if (!formMateri.title || !formMateri.content) { toast.error("Data tidak lengkap"); return; }
 
     setLoading(true);
-    const loadingToast = toast.loading('Menyimpan materi...');
-
+    const toastId = toast.loading("Menyimpan...");
     try {
       await addDoc(collection(db, "cbt_materials"), { ...formMateri, createdAt: serverTimestamp() });
-      
-      toast.success("Materi berhasil disimpan!", { id: loadingToast });
-      
+      toast.success("Berhasil disimpan!", { id: toastId });
+      // Reset Form
       setFormMateri({ ...formMateri, title: '', content: '', insight: '' });
-    } catch (error) { 
-      console.error(error); 
-      toast.error("Gagal menyimpan materi.", { id: loadingToast });
-    } finally { setLoading(false); }
+    } catch (error) { toast.error("Gagal simpan", { id: toastId }); } finally { setLoading(false); }
   };
 
   const fetchData = async () => {
@@ -131,22 +112,14 @@ export default function AdminDashboard() {
       
       if(activeSection === 'soal') setQuestions(data as CBTQuestion[]);
       else setMaterials(data as CBTMaterial[]);
-    } catch (error) { 
-      console.error(error); 
-      toast.error("Gagal mengambil data.");
-    } finally { setLoading(false); }
+    } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Yakin hapus data ini?")) {
-      const loadingToast = toast.loading('Menghapus...');
-      try {
-        await deleteDoc(doc(db, activeSection === 'soal' ? "cbt_questions" : "cbt_materials", id));
-        toast.success("Data berhasil dihapus", { id: loadingToast });
-        fetchData();
-      } catch (err) {
-        toast.error("Gagal menghapus", { id: loadingToast });
-      }
+    if (confirm("Hapus item ini?")) {
+      await deleteDoc(doc(db, activeSection === 'soal' ? "cbt_questions" : "cbt_materials", id));
+      toast.success("Terhapus");
+      fetchData();
     }
   };
 
@@ -154,85 +127,90 @@ export default function AdminDashboard() {
     const targetName = activeSection === 'soal' ? 'Bank Soal' : 'Materi High Yield';
     if (prompt(`Ketik "HAPUS" untuk menghapus SEMUA data ${targetName}:`) === "HAPUS") {
       setLoading(true);
-      const loadingToast = toast.loading('Mereset database...');
+      const toastId = toast.loading("Mereset database...");
       try {
         const collectionName = activeSection === 'soal' ? "cbt_questions" : "cbt_materials";
         const snapshot = await getDocs(collection(db, collectionName));
         const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
-        
-        toast.success(`Database ${targetName} bersih!`, { id: loadingToast });
+        toast.success("Database bersih!", { id: toastId });
         fetchData();
-      } catch (error) { 
-        console.error(error); 
-        toast.error("Gagal reset database.", { id: loadingToast });
-      } finally { setLoading(false); }
-    } else {
-        toast("Reset dibatalkan");
+      } catch (error) { toast.error("Gagal reset", { id: toastId }); } finally { setLoading(false); }
     }
   };
 
-  // --- IMPORT JSON ---
-  const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processJsonData = async (jsonData: any[]) => {
+    if (!Array.isArray(jsonData)) throw new Error("Format JSON harus Array []");
+    const total = jsonData.length;
+    const collectionName = activeSection === 'soal' ? "cbt_questions" : "cbt_materials";
+    const defaultSystem = activeSection === 'soal' ? formSoal.system : formMateri.system;
+
+    for (let i = 0; i < total; i++) {
+      const item = jsonData[i];
+      let payload = {};
+      if (activeSection === 'soal') {
+          payload = {
+              system: item.system || defaultSystem, 
+              question: item.question,
+              options: item.options, 
+              correctAnswer: item.correctAnswer?.toLowerCase(),
+              explanation: item.explanation,
+              insight: item.insight || '',
+              type: item.type || 'free', 
+              createdAt: serverTimestamp()
+          };
+      } else {
+          payload = {
+              system: item.system || defaultSystem,
+              title: item.title || item.topic || 'Tanpa Judul', 
+              content: item.content,
+              category: item.category || 'High Yield',
+              insight: item.insight || '',
+              type: item.type || 'free',
+              createdAt: serverTimestamp()
+          };
+      }
+      await addDoc(collection(db, collectionName), payload);
+      setUploadProgress(Math.round(((i + 1) / total) * 100));
+    }
+  };
+
+  const handleTextImport = async () => {
+    if (!jsonTextInput.trim()) { toast.error("Tempel kode JSON dulu!"); return; }
+    setLoading(true); setUploadProgress(0);
+    const toastId = toast.loading("Memproses text JSON...");
+    try {
+        const parsedData = JSON.parse(jsonTextInput);
+        await processJsonData(parsedData);
+        toast.success(`Sukses import ${parsedData.length} data!`, { id: toastId });
+        setJsonTextInput(''); fetchData(); setActiveTab('list');
+    } catch (error) { toast.error("Format JSON Invalid!", { id: toastId }); } finally { setLoading(false); setUploadProgress(0); }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
       setLoading(true); setUploadProgress(0);
-      const loadingToast = toast.loading('Membaca file JSON...');
-      
+      const toastId = toast.loading("Membaca file...");
       fileReader.readAsText(e.target.files[0], "UTF-8");
-      
       fileReader.onload = async (event) => {
         try {
           const parsedData = JSON.parse(event.target?.result as string);
-          if (!Array.isArray(parsedData)) throw new Error("Format JSON harus Array []");
-          
-          const total = parsedData.length;
-          const collectionName = activeSection === 'soal' ? "cbt_questions" : "cbt_materials";
-          const defaultSystem = activeSection === 'soal' ? formSoal.system : formMateri.system;
-
-          toast.loading(`Mengupload ${total} data...`, { id: loadingToast });
-
-          for (let i = 0; i < total; i++) {
-            const item = parsedData[i];
-            let payload = {};
-            
-            if (activeSection === 'soal') {
-                payload = {
-                    system: item.system || defaultSystem, 
-                    question: item.question,
-                    options: item.options, 
-                    correctAnswer: item.correctAnswer?.toLowerCase(),
-                    explanation: item.explanation,
-                    insight: item.insight || '', 
-                    createdAt: serverTimestamp()
-                };
-            } else {
-                payload = {
-                    system: item.system || defaultSystem,
-                    title: item.topic || item.title || 'Tanpa Judul',
-                    content: item.content,
-                    category: item.category || 'High Yield',
-                    insight: item.insight || '',
-                    createdAt: serverTimestamp()
-                };
-            }
-            await addDoc(collection(db, collectionName), payload);
-            setUploadProgress(Math.round(((i + 1) / total) * 100));
-          }
-          
-          toast.success(`Sukses import ${total} data ke: ${defaultSystem}!`, { id: loadingToast });
-          fetchData();
-          setActiveTab('list');
-        } catch (error) { 
-          console.error(error); 
-          toast.error("Gagal import JSON. Cek format file.", { id: loadingToast });
-        } 
-        finally { setLoading(false); setUploadProgress(0); }
+          await processJsonData(parsedData);
+          toast.success(`Sukses import ${parsedData.length} data!`, { id: toastId });
+          fetchData(); setActiveTab('list');
+        } catch (error) { toast.error("Gagal import file JSON", { id: toastId }); } finally { setLoading(false); setUploadProgress(0); }
       };
     }
   };
 
   useEffect(() => { if (activeTab === 'list') fetchData(); }, [activeTab, activeSection]);
+
+  // HELPER: Label Badge
+  const getTypeBadge = (type: string | undefined) => {
+      if (type === 'premium') return <span className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-200"><Lock size={10} /> PRO</span>;
+      return <span className="flex items-center gap-1 bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-200"><Unlock size={10} /> FREE</span>;
+  };
 
   return (
     <div className="p-6 pb-24 animate-in fade-in max-w-5xl mx-auto">
@@ -255,87 +233,150 @@ export default function AdminDashboard() {
         <button onClick={() => setActiveTab('list')} className={`pb-2 text-sm font-bold border-b-2 ${activeTab === 'list' ? 'border-slate-800 text-slate-800 dark:border-white dark:text-white' : 'border-transparent text-slate-400'}`}>Lihat Daftar</button>
       </div>
 
-      {/* --- FORM INPUT MANUAL (SOAL) --- */}
-      {activeSection === 'soal' && activeTab === 'input' && (
-        <form onSubmit={handleSimpanSoal} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-           <div className="flex items-center gap-2 text-indigo-600 font-bold mb-2"><PenTool size={18} /> Input Soal Baru</div>
-           <div><label className="text-xs font-bold text-slate-400">SISTEM</label><select value={formSoal.system} onChange={(e) => setFormSoal({...formSoal, system: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl">{SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}</select></div>
-           <div><label className="text-xs font-bold text-slate-400">VIGNETTE</label><textarea value={formSoal.question} onChange={(e) => setFormSoal({...formSoal, question: e.target.value})} rows={4} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>
-           <div className="grid md:grid-cols-2 gap-3">{['a','b','c','d','e'].map((opt) => (<div key={opt} className="relative"><span className="absolute left-3 top-3.5 text-xs font-bold uppercase text-slate-400">{opt}</span><input type="text" value={(formSoal.options as any)[opt]} onChange={(e) => setFormSoal({...formSoal, options: {...formSoal.options, [opt]: e.target.value}})} className="w-full pl-8 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>))}</div>
+      {/* --- FORM INPUT MANUAL --- */}
+      {activeTab === 'input' && (
+        <form onSubmit={activeSection === 'soal' ? handleSimpanSoal : handleSimpanMateri} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+           <div className="flex items-center gap-2 font-bold mb-2 text-slate-800 dark:text-white"><PenTool size={18} /> Input {activeSection === 'soal' ? 'Soal' : 'Materi'} Baru</div>
            
-           <div className="grid md:grid-cols-3 gap-4">
-              <div><label className="text-xs font-bold text-slate-400">KUNCI</label><select value={formSoal.correctAnswer} onChange={(e:any) => setFormSoal({...formSoal, correctAnswer: e.target.value})} className="w-full mt-1 p-3 bg-green-50 text-green-700 border border-green-200 rounded-xl font-bold">{['a','b','c','d','e'].map(o => <option key={o} value={o}>{o.toUpperCase()}</option>)}</select></div>
-              <div className="md:col-span-2"><label className="text-xs font-bold text-slate-400">PEMBAHASAN</label><input type="text" value={formSoal.explanation} onChange={(e) => setFormSoal({...formSoal, explanation: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>
-           </div>
-           
-           <div>
-             <label className="text-xs font-bold text-slate-400 flex items-center gap-1"><Sparkles size={12} className="text-emerald-500" /> INSIGHT (OPSIONAL)</label>
-             <input type="text" value={formSoal.insight || ''} onChange={(e) => setFormSoal({...formSoal, insight: e.target.value})} className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-400 placeholder:text-emerald-800/30" placeholder="Tips klinis..." />
-           </div>
-
-           <button disabled={loading} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all">{loading ? 'Menyimpan...' : 'Simpan Soal'}</button>
-        </form>
-      )}
-
-      {/* --- FORM INPUT MANUAL (MATERI) --- */}
-      {activeSection === 'materi' && activeTab === 'input' && (
-        <form onSubmit={handleSimpanMateri} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-           <div className="flex items-center gap-2 text-pink-600 font-bold mb-2"><FileText size={18} /> Input Materi Baru</div>
-           <div className="grid md:grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-400">SISTEM</label><select value={formMateri.system} onChange={(e) => setFormMateri({...formMateri, system: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl">{SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}</select></div><div><label className="text-xs font-bold text-slate-400">KATEGORI</label><select value={formMateri.category} onChange={(e) => setFormMateri({...formMateri, category: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"><option value="High Yield">High Yield</option><option value="Red Flag">Red Flag</option><option value="Emergency">Emergency</option><option value="Skill Lab">Skill Lab</option></select></div></div>
-           <div><label className="text-xs font-bold text-slate-400">JUDUL</label><input type="text" value={formMateri.title} onChange={(e) => setFormMateri({...formMateri, title: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>
-           <div><label className="text-xs font-bold text-slate-400">ISI MATERI</label><textarea value={formMateri.content} onChange={(e) => setFormMateri({...formMateri, content: e.target.value})} rows={8} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-sm" /></div>
-           <div><label className="text-xs font-bold text-slate-400">INSIGHT</label><input type="text" value={formMateri.insight} onChange={(e) => setFormMateri({...formMateri, insight: e.target.value})} className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-400" /></div>
-           <button disabled={loading} className="w-full py-4 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-lg transition-all">{loading ? 'Menyimpan...' : 'Simpan Materi'}</button>
-        </form>
-      )}
-
-      {/* --- IMPORT JSON (DENGAN SELECT SYSTEM) --- */}
-      {activeTab === 'import' && (
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-           <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${activeSection === 'soal' ? 'bg-indigo-50 text-indigo-500' : 'bg-pink-50 text-pink-500'}`}><FileJson size={40} /></div>
-           <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Import {activeSection === 'soal' ? 'Bank Soal' : 'Materi'} dari JSON</h3>
-           
-           <div className="max-w-xs mx-auto mb-6 text-left">
-             <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Akan diupload ke Sistem:</label>
-             {activeSection === 'soal' ? (
-                <select value={formSoal.system} onChange={(e) => setFormSoal({...formSoal, system: e.target.value})} className="w-full p-2 bg-slate-100 dark:bg-slate-800 border rounded-lg text-sm font-bold text-indigo-600">
-                  {SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}
+           {/* Dropdown System & Tipe Konten */}
+           <div className="grid md:grid-cols-2 gap-4">
+             <div>
+                <label className="text-xs font-bold text-slate-400">SISTEM</label>
+                <select 
+                    value={activeSection === 'soal' ? formSoal.system : formMateri.system} 
+                    onChange={(e) => activeSection === 'soal' ? setFormSoal({...formSoal, system: e.target.value}) : setFormMateri({...formMateri, system: e.target.value})} 
+                    className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
+                >
+                    {SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}
                 </select>
-             ) : (
-                <select value={formMateri.system} onChange={(e) => setFormMateri({...formMateri, system: e.target.value})} className="w-full p-2 bg-slate-100 dark:bg-slate-800 border rounded-lg text-sm font-bold text-pink-600">
-                  {SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}
+             </div>
+             
+             {/* --- UPDATE: PILIHAN TIPE KONTEN (FREE/PREMIUM) --- */}
+             <div>
+                <label className="text-xs font-bold text-slate-400">TIPE KONTEN</label>
+                <select 
+                    value={activeSection === 'soal' ? formSoal.type : formMateri.type} 
+                    onChange={(e: any) => activeSection === 'soal' ? setFormSoal({...formSoal, type: e.target.value}) : setFormMateri({...formMateri, type: e.target.value})} 
+                    className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-700"
+                >
+                    <option value="free">🔓 Free (Gratis)</option>
+                    <option value="premium">💎 Premium (Berbayar)</option>
                 </select>
-             )}
-             <p className="text-[10px] text-slate-400 mt-1">*Jika di file JSON tidak ada label system, akan menggunakan pilihan ini.</p>
+             </div>
            </div>
-
-           {loading ? (
-             <div className="max-w-md mx-auto"><div className="mb-2 flex justify-between text-xs font-bold"><span>Mengupload...</span><span>{uploadProgress}%</span></div><div className="w-full bg-slate-200 rounded-full h-2.5"><div className={`h-2.5 rounded-full transition-all ${activeSection === 'soal' ? 'bg-indigo-600' : 'bg-pink-600'}`} style={{width: `${uploadProgress}%`}}></div></div></div>
-           ) : (
-             <label className="cursor-pointer inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"><Upload size={20} /> Pilih File JSON<input type="file" accept=".json" className="hidden" onChange={(e) => handleJsonUpload(e)} /></label>
+           
+           {/* Kategori Khusus Materi */}
+           {activeSection === 'materi' && (
+             <div>
+                <label className="text-xs font-bold text-slate-400">KATEGORI</label>
+                <select value={formMateri.category} onChange={(e) => setFormMateri({...formMateri, category: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    <option value="High Yield">High Yield</option>
+                    <option value="Red Flag">Red Flag</option>
+                    <option value="Emergency">Emergency</option>
+                    <option value="Skill Lab">Skill Lab</option>
+                </select>
+             </div>
            )}
+
+           {/* Input Soal Specific */}
+           {activeSection === 'soal' && (
+             <>
+               <div><label className="text-xs font-bold text-slate-400">VIGNETTE</label><textarea value={formSoal.question} onChange={(e) => setFormSoal({...formSoal, question: e.target.value})} rows={4} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>
+               <div className="grid md:grid-cols-2 gap-3">{['a','b','c','d','e'].map((opt) => (<div key={opt} className="relative"><span className="absolute left-3 top-3.5 text-xs font-bold uppercase text-slate-400">{opt}</span><input type="text" value={(formSoal.options as any)[opt]} onChange={(e) => setFormSoal({...formSoal, options: {...formSoal.options, [opt]: e.target.value}})} className="w-full pl-8 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>))}</div>
+               <div className="grid md:grid-cols-3 gap-4"><div><label className="text-xs font-bold text-slate-400">KUNCI</label><select value={formSoal.correctAnswer} onChange={(e:any) => setFormSoal({...formSoal, correctAnswer: e.target.value})} className="w-full mt-1 p-3 bg-green-50 text-green-700 border border-green-200 rounded-xl font-bold">{['a','b','c','d','e'].map(o => <option key={o} value={o}>{o.toUpperCase()}</option>)}</select></div><div className="md:col-span-2"><label className="text-xs font-bold text-slate-400">PEMBAHASAN</label><input type="text" value={formSoal.explanation} onChange={(e) => setFormSoal({...formSoal, explanation: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div></div>
+               <div><label className="text-xs font-bold text-slate-400 flex items-center gap-1"><Sparkles size={12} className="text-emerald-500" /> INSIGHT</label><input type="text" value={formSoal.insight || ''} onChange={(e) => setFormSoal({...formSoal, insight: e.target.value})} className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-400" /></div>
+             </>
+           )}
+
+           {/* Input Materi Specific */}
+           {activeSection === 'materi' && (
+             <>
+               <div><label className="text-xs font-bold text-slate-400">JUDUL</label><input type="text" value={formMateri.title} onChange={(e) => setFormMateri({...formMateri, title: e.target.value})} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl" /></div>
+               <div><label className="text-xs font-bold text-slate-400">ISI MATERI</label><textarea value={formMateri.content} onChange={(e) => setFormMateri({...formMateri, content: e.target.value})} rows={8} className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-sm" /></div>
+               <div><label className="text-xs font-bold text-slate-400">INSIGHT</label><input type="text" value={formMateri.insight} onChange={(e) => setFormMateri({...formMateri, insight: e.target.value})} className="w-full mt-1 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-400" /></div>
+             </>
+           )}
+
+           <button disabled={loading} className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all ${activeSection === 'soal' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-pink-600 hover:bg-pink-700'}`}>{loading ? 'Menyimpan...' : 'Simpan'}</button>
+        </form>
+      )}
+
+      {/* --- IMPORT JSON (DUAL MODE) --- */}
+      {activeTab === 'import' && (
+        <div className="space-y-8">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${activeSection === 'soal' ? 'bg-indigo-50 text-indigo-500' : 'bg-pink-50 text-pink-500'}`}><FileJson size={32} /></div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Opsi 1: Upload File JSON</h3>
+                
+                <div className="max-w-xs mx-auto mb-4 text-left">
+                    <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Sistem (Default jika kosong):</label>
+                    <select 
+                        value={activeSection === 'soal' ? formSoal.system : formMateri.system} 
+                        onChange={(e) => activeSection === 'soal' ? setFormSoal({...formSoal, system: e.target.value}) : setFormMateri({...formMateri, system: e.target.value})}
+                        className="w-full p-2 bg-slate-100 dark:bg-slate-800 border rounded-lg text-sm font-bold"
+                    >
+                        {SYSTEM_LIST.map(sys => <option key={sys.id} value={sys.label}>{sys.label}</option>)}
+                    </select>
+                </div>
+
+                {loading ? (
+                    <div className="max-w-md mx-auto"><div className="mb-2 flex justify-between text-xs font-bold"><span>Mengupload...</span><span>{uploadProgress}%</span></div><div className="w-full bg-slate-200 rounded-full h-2.5"><div className={`h-2.5 rounded-full transition-all ${activeSection === 'soal' ? 'bg-indigo-600' : 'bg-pink-600'}`} style={{width: `${uploadProgress}%`}}></div></div></div>
+                ) : (
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"><Upload size={18} /> Pilih File JSON<input type="file" accept=".json" className="hidden" onChange={handleFileUpload} /></label>
+                )}
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                    <Code size={20} className="text-slate-400" />
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white">Opsi 2: Paste JSON Code</h3>
+                </div>
+                <p className="text-slate-500 text-sm mb-4">Copy kode JSON dari editor Anda dan paste di sini.</p>
+                <textarea 
+                    value={jsonTextInput}
+                    onChange={(e) => setJsonTextInput(e.target.value)}
+                    placeholder={`[\n  {\n    "system": "Kardiovaskular",\n    "topic": "...",\n    "type": "premium"\n  }\n]`}
+                    className="w-full h-64 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-xs mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+                <button onClick={handleTextImport} disabled={loading || !jsonTextInput} className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    <Upload size={18} /> Import dari Text
+                </button>
+            </div>
         </div>
       )}
 
-      {/* --- LIST DATA & RESET --- */}
+      {/* --- LIST DATA --- */}
       {activeTab === 'list' && (
          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className={`font-bold ${activeSection === 'soal' ? 'text-indigo-600' : 'text-pink-600'}`}>Total: {activeSection === 'soal' ? questions.length : materials.length}</h3>
               <button onClick={handleResetDatabase} className="text-xs flex items-center gap-1 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors"><AlertTriangle size={12} /> Reset Database</button>
             </div>
+            
             {activeSection === 'soal' ? questions.map(q => (
               <div key={q.id} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 group">
-                <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase bg-indigo-50 text-indigo-600 px-2 py-1 rounded">{q.system}</span><button onClick={() => handleDelete(q.id!)} className="text-slate-400 hover:text-red-500"><Trash2 size={18} /></button></div>
+                <div className="flex justify-between items-start mb-2">
+                   <div className="flex gap-2">
+                      <span className="text-xs font-bold uppercase bg-indigo-50 text-indigo-600 px-2 py-1 rounded">{q.system}</span>
+                      {getTypeBadge(q.type)} {/* Label Pro/Free */}
+                   </div>
+                   <button onClick={() => handleDelete(q.id!)} className="text-slate-400 hover:text-red-500"><Trash2 size={18} /></button>
+                </div>
                 <p className="font-medium text-slate-800 dark:text-slate-200 mb-2 line-clamp-2">{q.question}</p>
                 <div className="flex items-center gap-4 text-xs">
                    <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">Kunci: {q.correctAnswer.toUpperCase()}</span>
-                   {q.insight && <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1"><Sparkles size={10} /> Ada Insight</span>}
                 </div>
               </div>
             )) : materials.map(m => (
               <div key={m.id} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-pink-500 group">
-                <div className="flex justify-between items-start mb-2"><div className="flex gap-2"><span className="text-xs font-bold uppercase bg-pink-50 text-pink-600 px-2 py-1 rounded">{m.system}</span><span className="text-xs font-bold uppercase bg-orange-50 text-orange-600 px-2 py-1 rounded">{m.category}</span></div><button onClick={() => handleDelete(m.id!)} className="text-slate-400 hover:text-red-500"><Trash2 size={18} /></button></div>
+                <div className="flex justify-between items-start mb-2">
+                   <div className="flex gap-2">
+                      <span className="text-xs font-bold uppercase bg-pink-50 text-pink-600 px-2 py-1 rounded">{m.system}</span>
+                      <span className="text-xs font-bold uppercase bg-orange-50 text-orange-600 px-2 py-1 rounded">{m.category}</span>
+                      {getTypeBadge(m.type)} {/* Label Pro/Free */}
+                   </div>
+                   <button onClick={() => handleDelete(m.id!)} className="text-slate-400 hover:text-red-500"><Trash2 size={18} /></button>
+                </div>
                 <h4 className="font-bold text-lg text-slate-800 dark:text-white mb-2">{m.title}</h4>
                 <p className="text-sm text-slate-500 line-clamp-2 mb-3">{m.content}</p>
               </div>

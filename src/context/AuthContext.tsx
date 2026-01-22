@@ -1,27 +1,34 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { 
   onAuthStateChanged, 
-  User, 
+  User as FirebaseUser, // 1. Kita ganti nama import Firebase jadi 'FirebaseUser' biar gak bentrok
   UserCredential, 
   GoogleAuthProvider, 
   signInWithPopup,
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile // Pastikan ini diimport
+  updateProfile 
 } from 'firebase/auth';
-import { auth } from '../lib/firebase'; // Sesuaikan path ini jika pakai folder lib
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase'; 
+
+// 2. Gunakan nama 'AppUser' untuk interface aplikasi kita
+export interface AppUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null; // Izinkan null agar sesuai dengan Firebase
+  photoURL: string | null;    // Izinkan null
+  subscriptionStatus?: 'free' | 'premium';
+}
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: AppUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<UserCredential>;
   login: (email: string, password: string) => Promise<UserCredential>;
-  
-  // --- TAMBAHAN PENTING ---
-  // Kita expose fungsi ini agar bisa dipakai di halaman Profile
   updateUserProfile: (name: string) => Promise<void>; 
 }
 
@@ -36,7 +43,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loginWithGoogle = async () => {
@@ -45,18 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string, name: string) => {
-    // 1. Buat Akun
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // 2. Langsung Update Nama Lengkap ke Profil Firebase
     if (userCredential.user) {
         await updateProfile(userCredential.user, {
             displayName: name
         });
-        // Update state lokal agar UI langsung berubah tanpa refresh
-        setCurrentUser({ ...userCredential.user, displayName: name });
+        
+        // Update state manual agar sesuai tipe AppUser
+        setCurrentUser({
+            uid: userCredential.user.uid,
+            email: userCredential.user.email,
+            displayName: name,
+            photoURL: userCredential.user.photoURL,
+            subscriptionStatus: 'free'
+        });
     }
-
     return userCredential;
   };
 
@@ -68,26 +79,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
   };
 
-  // --- FUNGSI BARU: UPDATE PROFIL (STANDALONE) ---
   const updateUserProfile = async (name: string) => {
-    // Cek apakah ada user yang sedang login di Firebase
     if (auth.currentUser) {
-        // Update di Server Firebase
         await updateProfile(auth.currentUser, {
             displayName: name
         });
-
-        // Update di State Lokal React (PENTING)
-        // Kita harus force update object currentUser agar React me-render ulang nama baru di Dashboard
-        setCurrentUser({ ...auth.currentUser, displayName: name });
+        // Update state lokal
+        setCurrentUser((prev) => prev ? { ...prev, displayName: name } : null);
     } else {
         throw new Error("Tidak ada user yang login");
     }
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+         // Cek status subscription di Firestore
+         let subStatus: 'free' | 'premium' = 'free';
+         try {
+            const docRef = doc(db, "users", firebaseUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+               const data = docSnap.data();
+               if (data.subscriptionStatus === 'premium') {
+                   subStatus = 'premium';
+               }
+            }
+         } catch (err) {
+             console.error("Gagal ambil status user", err);
+         }
+
+         // Mapping dari FirebaseUser ke AppUser
+         const userForState: AppUser = {
+             uid: firebaseUser.uid,
+             email: firebaseUser.email,
+             displayName: firebaseUser.displayName,
+             photoURL: firebaseUser.photoURL,
+             subscriptionStatus: subStatus
+         };
+         
+         setCurrentUser(userForState);
+      } else {
+         setCurrentUser(null);
+      }
       setLoading(false);
     });
     return unsubscribe;
@@ -100,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     register,
     login,
-    updateUserProfile // Jangan lupa masukkan ke sini
+    updateUserProfile 
   };
 
   return (

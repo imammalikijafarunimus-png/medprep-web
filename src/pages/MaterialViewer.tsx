@@ -2,26 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, ChevronDown, Sparkles, 
-  AlertCircle, BookOpen, Star, Bookmark, Siren, Flame 
+  AlertCircle, BookOpen, Star, Bookmark, Lock 
 } from 'lucide-react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase'; // Pastikan path firebase benar
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '../context/AuthContext'; // 1. Import Auth
+import PremiumLock from '../components/PremiumLock'; // 2. Import Gembok
 
-// Sesuaikan Interface dengan Data dari Admin Panel Baru
+// 3. Update Interface Data
 interface Material {
   id: string;
   system: string;
-  title: string;      // Admin Panel pakai 'title'
+  topic: string; // atau title
   content: string; 
-  category: string;   // High Yield, Red Flag, Emergency
+  category: string;
   insight?: string;
+  type?: 'free' | 'premium'; // <--- Penanda Materi Berbayar
 }
 
 export default function MaterialViewer() {
   const [searchParams] = useSearchParams();
   const system = searchParams.get('system');
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Ambil user untuk cek status
   
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,23 +35,34 @@ export default function MaterialViewer() {
     const fetchMaterials = async () => {
       if (!system) return;
       try {
-        // AMBIL DARI KOLEKSI BARU 'cbt_materials'
-        // Kita urutkan berdasarkan createdAt desc (terbaru diatas) atau bisa di client side
+        // Query disesuaikan dengan struktur database Anda
+        // Pastikan field di Firebase adalah 'system', bukan 'category' jika pakai struktur baru
         const q = query(collection(db, "cbt_materials"), where("system", "==", system));
         const snapshot = await getDocs(q);
         
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Material[];
+        // Handle field 'topic' vs 'title' (karena ada 2 versi struktur sebelumnya)
+        const data = snapshot.docs.map(doc => {
+            const d = doc.data();
+            return { 
+                id: doc.id, 
+                ...d,
+                topic: d.title || d.topic // Fallback agar tidak error
+            };
+        }) as Material[];
         
-        // Sorting Client Side: Emergency & Red Flag duluan, baru High Yield
+        // Sorting: Premium/Must Know di atas
         const sortedData = data.sort((a, b) => {
-            const priority = { 'Emergency': 3, 'Red Flag': 2, 'High Yield': 1, 'Skill Lab': 0 };
-            const pA = priority[a.category as keyof typeof priority] || 0;
-            const pB = priority[b.category as keyof typeof priority] || 0;
-            return pB - pA;
+            const isAPremium = a.type === 'premium';
+            const isBPremium = b.type === 'premium';
+            if (isAPremium && !isBPremium) return -1;
+            if (!isAPremium && isBPremium) return 1;
+            return 0;
         });
 
         setMaterials(sortedData);
-        if (sortedData.length > 0) setExpandedId(sortedData[0].id);
+        // Auto expand item pertama jika ada
+        if (sortedData.length > 0) setExpandedId(sortedData[0].id); 
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -57,14 +72,12 @@ export default function MaterialViewer() {
     fetchMaterials();
   }, [system]);
 
-  // --- HELPER: BADGE COLOR & ICON ---
-  const getCategoryConfig = (cat: string) => {
-    switch (cat) {
-        case 'Red Flag': return { color: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400', icon: Siren };
-        case 'Emergency': return { color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', icon: Flame };
-        case 'High Yield': return { color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400', icon: Star };
-        default: return { color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400', icon: Bookmark };
-    }
+  // Helper Badge Color
+  const getBadgeStyle = (cat: string) => {
+    const category = cat?.toLowerCase() || '';
+    if (category.includes('high') || category.includes('yield')) return 'bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400';
+    if (category.includes('red') || category.includes('flag')) return 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400';
+    return 'bg-teal-100 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400';
   };
 
   return (
@@ -88,7 +101,7 @@ export default function MaterialViewer() {
               {system || 'Memuat Sistem...'}
             </h1>
             <p className="text-slate-300 text-sm max-w-xl leading-relaxed mt-2">
-              Rangkuman materi High Yield, Red Flag, dan Emergency cases sesuai SKDI.
+              Rangkuman poin kunci (High Yield) dan wawasan tambahan yang disesuaikan dengan SKDI terbaru.
             </p>
           </div>
         </div>
@@ -114,9 +127,12 @@ export default function MaterialViewer() {
           </div>
         )}
 
+        {/* --- MAP ITEM (DENGAN EXPLICIT RETURN UTK LOGIKA) --- */}
         {materials.map((item) => {
-            const config = getCategoryConfig(item.category);
-            const Icon = config.icon;
+            // 1. LOGIKA KUNCI GEMBOK
+            // Terkunci JIKA tipe premium DAN user BUKAN premium
+            // Default user status 'free' jika undefined
+            const isLocked = item.type === 'premium' && (currentUser?.subscriptionStatus || 'free') !== 'premium';
 
             return (
               <div 
@@ -135,16 +151,24 @@ export default function MaterialViewer() {
                   className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${config.color}`}>
-                      <Icon size={20} fill="currentColor" className="opacity-80" />
+                    {/* Icon Category */}
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'premium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-500' : 'bg-teal-100 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400'}`}>
+                      {item.type === 'premium' ? <Star size={20} fill="currentColor"/> : <Bookmark size={20} />}
                     </div>
 
                     <div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border mb-1 inline-block border-transparent bg-slate-100 dark:bg-slate-800 text-slate-500`}>
-                        {item.category}
-                      </span>
+                      <div className="flex gap-2 mb-1">
+                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border inline-block ${getBadgeStyle(item.category)}`}>
+                           {item.category}
+                         </span>
+                         {item.type === 'premium' && (
+                           <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 flex items-center gap-1">
+                             <Lock size={8} /> PRO
+                           </span>
+                         )}
+                      </div>
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                        {item.title}
+                        {item.topic}
                       </h3>
                     </div>
                   </div>
@@ -154,27 +178,37 @@ export default function MaterialViewer() {
                   </div>
                 </div>
 
-                {/* Expanded Content */}
+                {/* Expanded Content (Kondisional Gembok) */}
                 {expandedId === item.id && (
                   <div className="px-6 pb-8 pt-2 animate-in fade-in slide-in-from-top-2 border-t border-slate-100 dark:border-slate-800/50">
-                    <div className="prose prose-sm md:prose-base max-w-none prose-slate dark:prose-invert prose-headings:text-teal-600 dark:prose-headings:text-teal-400 prose-a:text-blue-500 prose-strong:text-slate-900 dark:prose-strong:text-white marker:text-teal-500 mt-4 leading-relaxed">
-                      <ReactMarkdown>{item.content}</ReactMarkdown>
-                    </div>
+                    
+                    {/* --- KONDISI GEMBOK DISINI --- */}
+                    {isLocked ? (
+                       <PremiumLock /> // Tampilkan Gembok jika terkunci
+                    ) : (
+                       // Tampilkan Konten Asli jika terbuka
+                       <>
+                         <div className="prose prose-sm md:prose-base max-w-none prose-slate dark:prose-invert prose-headings:text-teal-600 dark:prose-headings:text-teal-400 prose-a:text-blue-500 prose-strong:text-slate-900 dark:prose-strong:text-white marker:text-teal-500 mt-4 leading-relaxed">
+                           <ReactMarkdown>{item.content}</ReactMarkdown>
+                         </div>
 
-                    {item.insight && (
-                      <div className="mt-8 relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-900/10 p-5">
-                        <div className="absolute top-0 right-0 p-12 bg-emerald-400/10 rounded-full blur-xl translate-x-1/2 -translate-y-1/2"></div>
-                        <div className="relative z-10 flex gap-4">
-                          <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-lg text-emerald-600 dark:text-emerald-400 h-fit">
-                             <Sparkles size={18} />
-                          </div>
-                          <div>
-                            <h4 className="text-emerald-700 dark:text-emerald-400 font-bold text-sm mb-1">MedPrep Insight</h4>
-                            <p className="text-emerald-800 dark:text-emerald-200 text-sm italic leading-relaxed">"{item.insight}"</p>
-                          </div>
-                        </div>
-                      </div>
+                         {item.insight && (
+                           <div className="mt-8 relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-900/10 p-5">
+                             <div className="absolute top-0 right-0 p-12 bg-emerald-400/10 rounded-full blur-xl translate-x-1/2 -translate-y-1/2"></div>
+                             <div className="relative z-10 flex gap-4">
+                               <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-lg text-emerald-600 dark:text-emerald-400 h-fit">
+                                  <Sparkles size={18} />
+                               </div>
+                               <div>
+                                 <h4 className="text-emerald-700 dark:text-emerald-400 font-bold text-sm mb-1">MedPrep Insight</h4>
+                                 <p className="text-emerald-800 dark:text-emerald-200 text-sm italic leading-relaxed">"{item.insight}"</p>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+                       </>
                     )}
+                    
                   </div>
                 )}
               </div>
