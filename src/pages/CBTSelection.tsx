@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, Brain, ArrowRight, LayoutGrid, 
-  Zap, Folder, ChevronRight, Lock, ArrowLeft, Layers, History 
+  Zap, Folder, ChevronRight, Lock, ArrowLeft, History, PlayCircle 
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -11,23 +11,20 @@ import { SYSTEM_LIST } from '../data/osce_data';
 export default function CBTCenter() {
   const navigate = useNavigate();
   
-  // STATE
+  // STATE LOGIC (TETAP SAMA)
   const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
-  // View Mode: 'menu' (pilih sistem), 'method' (materi/soal), 'latihan_type' (acak/asli), 'folder_list'
   const [viewMode, setViewMode] = useState<'menu' | 'method' | 'latihan_type' | 'folder_list'>('menu');
   const [latihanCategory, setLatihanCategory] = useState<'drilling' | 'arsip' | null>(null);
-  
-  // DATA
   const [loading, setLoading] = useState(false);
   const [folders, setFolders] = useState<{name: string, year?: string, count: number, isPremium: boolean}[]>([]);
 
   // 1. SELECT SYSTEM
   const handleSelectSystem = (sys: string) => {
     setSelectedSystem(sys);
-    setViewMode('method'); // Lanjut pilih Materi vs Soal
+    setViewMode('method');
   };
 
-  // 2. FETCH FOLDERS (Dipanggil saat masuk list folder)
+  // 2. FETCH FOLDERS
   useEffect(() => {
     if (viewMode === 'folder_list' && selectedSystem && latihanCategory) {
         const fetchFolders = async () => {
@@ -41,10 +38,6 @@ export default function CBTCenter() {
                 snapshot.docs.forEach(doc => {
                     const d = doc.data();
                     const hasYear = d.examYear && d.examYear.trim() !== '' && d.examYear !== '-';
-                    
-                    // FILTER LOGIC:
-                    // Jika kategori 'arsip', hanya ambil yg punya Tahun.
-                    // Jika kategori 'drilling', hanya ambil yg TIDAK punya Tahun.
                     const isArsip = hasYear;
                     const isDrilling = !hasYear;
 
@@ -65,7 +58,6 @@ export default function CBTCenter() {
                     }
                 });
 
-                // Sort: Arsip berdasarkan tahun (desc), Drilling berdasarkan nama
                 const result = Object.values(groups);
                 if (latihanCategory === 'arsip') {
                     result.sort((a:any, b:any) => b.year - a.year);
@@ -92,130 +84,238 @@ export default function CBTCenter() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-24 max-w-5xl mx-auto p-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 max-w-7xl mx-auto px-4 md:px-6">
       
-      {/* HEADER DINAMIS */}
-      <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 p-40 bg-blue-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-        <div className="relative z-10">
-            <h1 className="text-3xl font-black text-white mb-2">
-                {selectedSystem ? selectedSystem : 'CBT Center'}
-            </h1>
-            <p className="text-slate-400 text-sm max-w-xl">
-               {selectedSystem ? `Modul Pembelajaran & Bank Soal ${selectedSystem}` : 'Pilih sistem organ untuk memulai belajar.'}
-            </p>
+      {/* HEADER HERO (Glassmorphism Dark) */}
+      <div className="relative bg-slate-900 dark:bg-black rounded-[2.5rem] p-8 md:p-10 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none">
+        {/* Background Effects */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[80px] opacity-20"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500 rounded-full blur-[60px] opacity-20"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                {/* Breadcrumb Navigation */}
+                {selectedSystem && (
+                    <button 
+                        onClick={handleBack} 
+                        className="mb-3 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-full w-fit backdrop-blur-md"
+                    >
+                        <ArrowLeft size={12} /> Kembali
+                    </button>
+                )}
+                
+                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+                    {selectedSystem ? selectedSystem : 'CBT Center'}
+                </h1>
+                <p className="text-slate-400 text-sm max-w-xl leading-relaxed">
+                   {selectedSystem 
+                        ? `Akses modul pembelajaran dan bank soal khusus sistem ${selectedSystem}.` 
+                        : 'Pilih sistem organ di bawah ini untuk memulai sesi belajar.'}
+                </p>
+            </div>
+            
+            {/* Decoration Icon */}
+            <div className="hidden md:flex w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                <LayoutGrid size={32} />
+            </div>
         </div>
       </div>
 
-      {/* TOMBOL BACK */}
-      {selectedSystem && (
-          <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">
-              <ArrowLeft size={16} /> Kembali
-          </button>
-      )}
-
-      {/* --- LEVEL 1: PILIH SISTEM --- */}
+      {/* --- LEVEL 1: PILIH SISTEM (Grid ala App Icon) --- */}
       {viewMode === 'menu' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {SYSTEM_LIST.map((sys) => (
-              <button
-                key={sys.id}
-                onClick={() => handleSelectSystem(sys.label)}
-                className="p-3 rounded-xl text-xs md:text-sm font-bold transition-all border flex items-center justify-center text-center h-16 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-500 hover:shadow-md"
-              >
-                {sys.label}
-              </button>
-          ))}
+        <div className="animate-in slide-in-from-bottom-8 duration-500">
+            <h3 className="text-slate-800 dark:text-white font-bold text-lg mb-6 flex items-center gap-2 px-1">
+              <span className="w-1.5 h-6 rounded-full bg-teal-500"></span> Pilih Sistem Organ
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {SYSTEM_LIST.map((sys) => (
+                <button
+                    key={sys.id}
+                    onClick={() => handleSelectSystem(sys.label)}
+                    className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 h-24 rounded-3xl flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent dark:from-indigo-900/20 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity"></div>
+                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 relative z-10 transition-colors">
+                        {sys.label}
+                    </span>
+                </button>
+            ))}
+            </div>
         </div>
       )}
 
-      {/* --- LEVEL 2: PILIH METODE (MATERI vs SOAL) --- */}
+      {/* --- LEVEL 2: PILIH METODE (Large Cards) --- */}
       {viewMode === 'method' && (
-        <div className="grid md:grid-cols-2 gap-6">
-            <div onClick={() => navigate(`/app/cbt/read?system=${encodeURIComponent(selectedSystem!)}`)} className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-pink-500 p-6 rounded-3xl cursor-pointer transition-all hover:-translate-y-1 shadow-sm">
-                <div className="w-12 h-12 bg-pink-50 text-pink-500 rounded-xl flex items-center justify-center mb-4"><BookOpen size={24} /></div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Pelajari Materi</h3>
-                <p className="text-slate-500 text-sm">Rangkuman High Yield & Insight.</p>
+        <div className="grid md:grid-cols-2 gap-6 animate-in zoom-in-95 duration-300">
+            {/* CARD 1: MATERI */}
+            <div 
+                onClick={() => navigate(`/app/cbt/read?system=${encodeURIComponent(selectedSystem!)}`)} 
+                className="group relative cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-pink-500/20 transition-all"></div>
+                <div className="relative z-10">
+                    <div className="w-16 h-16 bg-pink-50 dark:bg-pink-900/20 text-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                        <BookOpen size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Pelajari Materi</h3>
+                    <p className="text-slate-500 text-sm mb-8 max-w-xs">Akses rangkuman High Yield, Clinical Pearls, dan Guideline terbaru.</p>
+                    <span className="inline-flex items-center gap-2 font-bold text-pink-500 group-hover:gap-3 transition-all">
+                        Buka Materi <ArrowRight size={18} />
+                    </span>
+                </div>
             </div>
 
-            <div onClick={() => setViewMode('latihan_type')} className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 p-6 rounded-3xl cursor-pointer transition-all hover:-translate-y-1 shadow-sm">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center mb-4"><Brain size={24} /></div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Latihan Soal (MCQ)</h3>
-                <p className="text-slate-500 text-sm">Uji pemahaman dengan soal vignette.</p>
+            {/* CARD 2: SOAL */}
+            <div 
+                onClick={() => setViewMode('latihan_type')} 
+                className="group relative cursor-pointer bg-slate-900 dark:bg-black border border-slate-800 dark:border-white/10 p-8 rounded-[2.5rem] hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-500 overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-indigo-500/30 transition-all"></div>
+                <div className="relative z-10">
+                    <div className="w-16 h-16 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg backdrop-blur-md border border-white/10">
+                        <Brain size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Latihan Soal (MCQ)</h3>
+                    <p className="text-slate-400 text-sm mb-8 max-w-xs">Uji pemahaman klinis dengan ribuan soal vignette standar UKMPPD.</p>
+                    <span className="inline-flex items-center gap-2 font-bold text-indigo-400 group-hover:gap-3 transition-all">
+                        Pilih Mode Latihan <ArrowRight size={18} />
+                    </span>
+                </div>
             </div>
         </div>
       )}
 
-      {/* --- LEVEL 3: PILIH TIPE LATIHAN (DRILLING vs ARSIP) --- */}
+      {/* --- LEVEL 3: PILIH TIPE LATIHAN (Drilling vs Arsip) --- */}
       {viewMode === 'latihan_type' && (
-        <div className="grid md:grid-cols-2 gap-6">
-            {/* Opsi Drilling (Folder Custom) */}
-            <div onClick={() => { setLatihanCategory('drilling'); setViewMode('folder_list'); }} className="relative bg-gradient-to-br from-indigo-500 to-purple-600 p-1 rounded-3xl cursor-pointer hover:scale-[1.01] transition-transform">
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-[22px] h-full relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-16 bg-indigo-500/10 rounded-full blur-2xl translate-x-1/3 -translate-y-1/3"></div>
-                    <div className="flex items-center gap-3 mb-4 text-indigo-600 font-bold"><Zap size={24} /> MODE LATIHAN</div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Drilling Folder</h3>
-                    <p className="text-slate-500 text-sm mb-4">Kumpulan soal latihan per topik (Fase Intensif, Harian, dll).</p>
-                    <span className="text-indigo-600 font-bold text-sm flex items-center gap-2">Buka Folder <ArrowRight size={16}/></span>
+        <div className="grid md:grid-cols-2 gap-6 animate-in zoom-in-95 duration-300">
+            
+            {/* OPSI 1: DRILLING */}
+            <div 
+                onClick={() => { setLatihanCategory('drilling'); setViewMode('folder_list'); }} 
+                className="group relative cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] hover:border-indigo-500 transition-all hover:shadow-xl hover:shadow-indigo-500/10 overflow-hidden"
+            >
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent dark:from-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">
+                                <Zap size={24} fill="currentColor" />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full">Free / Premium</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Drilling Custom</h3>
+                        <p className="text-slate-500 text-sm">Latihan acak, fase intensif, dan drilling harian untuk melatih kecepatan.</p>
+                    </div>
+                    <div className="mt-8 flex justify-end">
+                        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <ChevronRight size={24} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Opsi Arsip (Folder Tahun) */}
-            <div onClick={() => { setLatihanCategory('arsip'); setViewMode('folder_list'); }} className="relative bg-gradient-to-br from-amber-400 to-orange-500 p-1 rounded-3xl cursor-pointer hover:scale-[1.01] transition-transform">
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-[22px] h-full relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-16 bg-amber-500/10 rounded-full blur-2xl translate-x-1/3 -translate-y-1/3"></div>
-                    <div className="flex items-center gap-3 mb-4 text-amber-600 font-bold"><History size={24} /> MODE ARSIP</div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Bank Soal UKMPPD</h3>
-                    <p className="text-slate-500 text-sm mb-4">Soal asli dikelompokkan berdasarkan Tahun & Batch ujian.</p>
-                    <span className="text-amber-600 font-bold text-sm flex items-center gap-2">Pilih Tahun <ArrowRight size={16}/></span>
+            {/* OPSI 2: ARSIP UKMPPD */}
+            <div 
+                onClick={() => { setLatihanCategory('arsip'); setViewMode('folder_list'); }} 
+                className="group relative cursor-pointer bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-black border border-amber-200 dark:border-amber-900/30 p-8 rounded-[2.5rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 group-hover:bg-amber-500/20 transition-all"></div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl">
+                                <History size={24} />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full flex items-center gap-1">
+                                <Lock size={10} /> Premium
+                            </span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Arsip UKMPPD</h3>
+                        <p className="text-slate-500 text-sm">Kumpulan soal asli (Recall) dikelompokkan berdasarkan Tahun & Batch.</p>
+                    </div>
+                    <div className="mt-8 flex justify-end">
+                        <div className="w-12 h-12 rounded-full bg-amber-100/50 dark:bg-slate-800 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <PlayCircle size={24} />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
       )}
 
-      {/* --- LEVEL 4: LIST FOLDER --- */}
+      {/* --- LEVEL 4: LIST FOLDER (Floating List) --- */}
       {viewMode === 'folder_list' && (
-          <div>
-              <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-6 flex items-center gap-2">
-                  <Folder size={20} className={latihanCategory === 'arsip' ? "text-amber-500" : "text-indigo-500"} /> 
-                  Pilih Folder {latihanCategory === 'arsip' ? 'Arsip' : 'Latihan'}
-              </h3>
+          <div className="animate-in slide-in-from-bottom-8 duration-500">
+              <div className="flex items-center justify-between mb-6 px-2">
+                <h3 className="text-slate-800 dark:text-white font-bold text-lg flex items-center gap-2">
+                    <Folder size={20} className={latihanCategory === 'arsip' ? "text-amber-500" : "text-indigo-500"} /> 
+                    Folder {latihanCategory === 'arsip' ? 'Arsip' : 'Latihan'}
+                </h3>
+              </div>
 
-              {loading && <div className="text-center py-12 text-slate-400 animate-pulse">Memuat folder...</div>}
-
-              {!loading && folders.length === 0 && (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
-                      <p className="text-slate-400">Belum ada folder soal di kategori ini.</p>
+              {loading && (
+                  <div className="space-y-3">
+                      {[1,2,3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800/50 rounded-3xl animate-pulse"></div>)}
                   </div>
               )}
 
-              <div className="space-y-3">
+              {!loading && folders.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 text-center">
+                      <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                          <Folder size={32} />
+                      </div>
+                      <p className="text-slate-500 font-medium">Belum ada folder soal.</p>
+                  </div>
+              )}
+
+              <div className="grid gap-3">
                   {folders.map((folder, idx) => (
                       <div 
                         key={idx}
                         onClick={() => navigate(`/app/cbt/quiz?system=${encodeURIComponent(selectedSystem!)}&batch=${folder.name}&year=${folder.year}`)}
-                        className={`group bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex items-center justify-between ${latihanCategory === 'arsip' ? 'hover:border-amber-500' : 'hover:border-indigo-500'}`}
+                        className={`group relative bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-white/5 hover:border-transparent transition-all cursor-pointer flex items-center justify-between overflow-hidden
+                            ${latihanCategory === 'arsip' 
+                                ? 'hover:shadow-lg hover:shadow-amber-500/10' 
+                                : 'hover:shadow-lg hover:shadow-indigo-500/10'}`
+                        }
                       >
-                          <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-sm transition-colors ${latihanCategory === 'arsip' ? 'bg-blue-50 text-blue-600 group-hover:bg-amber-50 group-hover:text-amber-600' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100'}`}>
+                          {/* Hover Gradient Overlay */}
+                          <div className={`absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 transition-opacity ${latihanCategory === 'arsip' ? 'from-amber-500 to-orange-500' : 'from-indigo-500 to-purple-500'}`}></div>
+
+                          <div className="relative z-10 flex items-center gap-5">
+                              {/* Icon Box */}
+                              <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-bold text-xs shadow-sm transition-transform group-hover:scale-110 
+                                  ${latihanCategory === 'arsip' 
+                                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' 
+                                    : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400'}`
+                              }>
                                   {latihanCategory === 'arsip' ? (
                                       <>
-                                        <span className="text-[10px] opacity-70">THN</span>
-                                        {folder.year}
+                                        <span className="text-[9px] opacity-60 uppercase tracking-widest">THN</span>
+                                        <span className="text-sm">{folder.year}</span>
                                       </>
                                   ) : (
-                                      <Zap size={20} />
+                                      <Zap size={24} fill="currentColor" />
                                   )}
                               </div>
+                              
                               <div>
-                                  <h4 className="font-bold text-slate-900 dark:text-white text-lg">{folder.name}</h4>
-                                  <p className="text-slate-500 text-sm flex items-center gap-2">
-                                      {folder.count} Soal 
-                                      {folder.isPremium && <span className="bg-amber-100 text-amber-700 text-[10px] px-1.5 rounded border border-amber-200 flex items-center gap-1"><Lock size={8}/> PRO</span>}
-                                  </p>
+                                  <h4 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-indigo-600 dark:group-hover:text-amber-400 transition-colors">{folder.name}</h4>
+                                  <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                                          {folder.count} Soal
+                                      </span>
+                                      {folder.isPremium && (
+                                          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-100 dark:border-amber-800">
+                                              <Lock size={8} /> PRO
+                                          </span>
+                                      )}
+                                  </div>
                               </div>
                           </div>
-                          <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-all">
+
+                          <div className="relative z-10 w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-white dark:group-hover:bg-slate-700 group-hover:text-slate-800 dark:group-hover:text-white transition-all shadow-sm">
                               <ChevronRight size={20} />
                           </div>
                       </div>

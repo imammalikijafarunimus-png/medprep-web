@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, XCircle, AlertCircle, 
   ChevronRight, ChevronLeft, RotateCcw, Brain, Sparkles, Lock,
-  Trophy
+  Trophy, Activity, Target
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -20,18 +20,18 @@ interface Question {
   explanation: string;
   insight?: string;
   type?: 'free' | 'premium';
-  examBatch?: string; // Tambahan field
-  examYear?: string;  // Tambahan field
+  examBatch?: string; 
+  examYear?: string;  
 }
 
-export default function MateriReader() {
+export default function MaterialReader() {
   const [searchParams] = useSearchParams();
   
-  // AMBIL PARAMETER DARI URL
+  // AMBIL PARAMETER
   const system = searchParams.get('system');
-  const batchParam = searchParams.get('batch'); // Nama Folder
-  const yearParam = searchParams.get('year');   // Tahun (Opsional)
-  const modeParam = searchParams.get('mode');   // 'random' atau null
+  const batchParam = searchParams.get('batch');
+  const yearParam = searchParams.get('year');
+  const modeParam = searchParams.get('mode');
 
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -45,38 +45,27 @@ export default function MateriReader() {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
+  // --- FETCHING DATA ---
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!system) return;
-      setLoading(true); // Reset loading saat fetch ulang
+      setLoading(true); 
       
       try {
-        // 1. Ambil SEMUA soal sistem tersebut dulu
         const q = query(collection(db, "cbt_questions"), where("system", "==", system));
         const snapshot = await getDocs(q);
         let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Question[];
         
-        // 2. FILTER CLIENT-SIDE (Lebih Fleksibel)
         if (modeParam === 'random') {
-            // Jika mode random (Drilling Acak), ambil semua tanpa filter batch
-            // Tapi acak urutannya
             data = data.sort(() => Math.random() - 0.5);
         } else if (batchParam) {
-            // JIKA PILIH FOLDER TERTENTU
             data = data.filter(item => {
-                // Cek Nama Batch
                 const isBatchMatch = item.examBatch === batchParam;
-                
-                // Cek Tahun (Jika di URL ada tahun, di data harus sama. Jika tidak, data harus kosong/strip)
                 const isYearMatch = yearParam 
                     ? item.examYear === yearParam 
                     : (!item.examYear || item.examYear === '' || item.examYear === '-');
-
                 return isBatchMatch && isYearMatch;
             });
-            
-            // Urutkan soal dalam folder agar konsisten (opsional, atau bisa diacak juga)
-            // data = data.sort(() => Math.random() - 0.5); 
         }
 
         setQuestions(data);
@@ -90,24 +79,24 @@ export default function MateriReader() {
     fetchQuestions();
   }, [system, batchParam, yearParam, modeParam]);
 
+  // --- HANDLER ---
   const handleAnswer = (optionKey: string) => {
     const currentQ = questions[currentIndex];
-    const isLocked = currentQ.type === 'premium' && currentUser?.subscriptionStatus !== 'premium';
+    const isLocked = currentQ.type === 'premium' && (currentUser?.subscriptionStatus || 'free') !== 'premium';
     
     if (isLocked || isFinished || showExplanation[currentQ.id]) return;
 
     setSelectedAnswers(prev => ({ ...prev, [currentQ.id]: optionKey }));
     setShowExplanation(prev => ({ ...prev, [currentQ.id]: true }));
     
-    // Counter Global Dashboard
     const currentCount = parseInt(localStorage.getItem('medprep_cbt_counter') || '0');
     localStorage.setItem('medprep_cbt_counter', (currentCount + 1).toString());
 
     if (optionKey.toLowerCase() === currentQ.correctAnswer.toLowerCase()) {
         setScore(prev => prev + 1);
-        toast.success("Tepat! 🎯", { position: 'bottom-center', duration: 1000 });
+        toast.success("Tepat! 🎯", { position: 'bottom-center', duration: 1000, style: { borderRadius: '20px', background: '#333', color: '#fff' } });
     } else {
-        toast.error("Kurang Tepat ❌", { position: 'bottom-center', duration: 1000 });
+        toast.error("Kurang Tepat ❌", { position: 'bottom-center', duration: 1000, style: { borderRadius: '20px', background: '#333', color: '#fff' } });
     }
   };
 
@@ -128,109 +117,145 @@ export default function MateriReader() {
 
   if (questions.length === 0) return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center">
-        <AlertCircle size={40} className="text-slate-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Folder Kosong</h2>
-        <p className="text-slate-500 mt-2 text-sm">Belum ada soal di folder <b>{batchParam}</b> ini.</p>
-        <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">Kembali</button>
+        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 text-slate-400">
+            <AlertCircle size={40} />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Folder Kosong</h2>
+        <p className="text-slate-500 mb-8 max-w-xs mx-auto">Belum ada soal tersedia di folder <b>{batchParam}</b> ini.</p>
+        <button onClick={() => navigate(-1)} className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold hover:scale-105 transition-transform">Kembali</button>
       </div>
   );
 
   const activeQ = questions[currentIndex];
-  const isLocked = activeQ.type === 'premium' && currentUser?.subscriptionStatus !== 'premium';
-  
-  // Sort opsi jawaban
+  const isLocked = activeQ.type === 'premium' && (currentUser?.subscriptionStatus || 'free') !== 'premium';
   const sortedOptionKeys = activeQ.options ? Object.keys(activeQ.options).sort() : [];
+  const progressPercent = ((currentIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-black pb-32 font-sans transition-colors duration-500">
       
-      {/* HEADER */}
-      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 px-4 h-16 flex items-center shadow-sm">
-        <div className="w-full max-w-2xl mx-auto flex justify-between items-center relative">
-          
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500">
-             <ArrowLeft size={20} />
-          </button>
-          
-          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-            {/* Tampilkan Nama Folder/Batch di Header agar user tau sedang di mana */}
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {yearParam ? `${batchParam} ${yearParam}` : batchParam || 'Latihan'}
-            </span>
-            <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
-              {currentIndex + 1} <span className="text-slate-400 text-sm">/ {questions.length}</span>
-            </span>
-          </div>
-
-          <div className="text-sm font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800">
-             ★ {score}
-          </div>
-        </div>
+      {/* REVISI: HEADER DIPINDAH KE SINI (DALAM CONTENT FLOW)
+          Menghilangkan class 'fixed top-4', diganti menjadi container biasa.
+          Memberikan margin-bottom (mb-6) agar ada jarak dengan kotak soal.
+      */}
+      <div className="pt-6 px-4 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-500">
         
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
-           <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}></div>
-        </div>
-      </div>
-
-      {/* CONTENT AREA */}
-      <div className="pt-20 px-4 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
-        
-        {isFinished ? (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 mt-4">
-                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/30 animate-in zoom-in">
-                    <Trophy size={40} />
-                </div>
+        {/* --- FLOATING QUIZ HEADER (Posisi Relatif di Atas Soal) --- */}
+        {!isFinished && (
+            <div className="mb-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-full shadow-lg p-2 pl-4 flex items-center justify-between sticky top-24 z-30 transition-all">
                 
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Latihan Selesai!</h2>
-                <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-                  Anda telah menyelesaikan folder <b>{batchParam}</b>.
-                </p>
-
-                <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 mb-8 max-w-xs mx-auto">
-                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Akurasi Jawaban</p>
-                   <div className="flex items-end justify-center gap-2">
-                      <span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">{score}</span>
-                      <span className="text-lg text-slate-400 font-bold mb-1">/ {questions.length}</span>
-                   </div>
-                   <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
-                      <div className="h-full bg-indigo-500" style={{ width: `${(score / questions.length) * 100}%` }}></div>
-                   </div>
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            {yearParam ? `${batchParam} ${yearParam}` : batchParam || 'Latihan'}
+                        </span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-black text-slate-800 dark:text-white">Soal {currentIndex + 1}</span>
+                            <span className="text-xs font-medium text-slate-400">/ {questions.length}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex gap-3 justify-center">
-                  <button onClick={() => navigate('/app/cbt')} className="px-6 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
-                      Menu Utama
-                  </button>
-                  <button onClick={() => window.location.reload()} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/30">
-                      <RotateCcw size={18} /> Ulangi
-                  </button>
+                <div className="flex items-center gap-3 pr-2">
+                    <div className="hidden md:flex flex-col items-end mr-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Score</span>
+                        <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{score} Poin</span>
+                    </div>
+                    {/* Progress Circle Mini */}
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path className="text-slate-200 dark:text-slate-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                            <path className="text-indigo-500 transition-all duration-500" strokeDasharray={`${progressPercent}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-slate-600 dark:text-slate-300">
+                            {Math.round(progressPercent)}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {isFinished ? (
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 text-center shadow-2xl shadow-indigo-500/10 border border-slate-100 dark:border-white/5 relative overflow-hidden mt-8">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div className="relative z-10">
+                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-indigo-500/30 animate-in zoom-in duration-500">
+                        <Trophy size={48} fill="currentColor" className="text-white/90" />
+                    </div>
+                    
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-2">Latihan Selesai!</h2>
+                    <p className="text-slate-500 dark:text-slate-400 mb-10 max-w-md mx-auto leading-relaxed">
+                      Selamat Dok! Anda telah menyelesaikan sesi latihan <b>{batchParam}</b>. Pertahankan konsistensi belajarmu.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-10">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                            <div className="flex items-center justify-center gap-2 text-slate-400 text-xs font-bold uppercase mb-1">
+                                <Target size={14} /> Total Soal
+                            </div>
+                            <p className="text-2xl font-black text-slate-800 dark:text-white">{questions.length}</p>
+                        </div>
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-500/20">
+                            <div className="flex items-center justify-center gap-2 text-indigo-400 text-xs font-bold uppercase mb-1">
+                                <Activity size={14} /> Skor Anda
+                            </div>
+                            <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{score}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 justify-center">
+                      <button onClick={() => navigate('/app/cbt')} className="px-8 py-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                          Menu Utama
+                      </button>
+                      <button onClick={() => window.location.reload()} className="flex items-center gap-2 bg-slate-900 dark:bg-white hover:bg-slate-800 text-white dark:text-slate-900 px-10 py-4 rounded-2xl font-bold transition-all shadow-xl hover:scale-105 active:scale-95">
+                          <RotateCcw size={18} /> Ulangi
+                      </button>
+                    </div>
                 </div>
             </div>
         ) : (
             <>
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-6 relative overflow-hidden min-h-[300px]">
-                    <div className="flex justify-end mb-4">
+                {/* QUESTION CARD */}
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5 relative overflow-hidden min-h-[400px]">
+                    
+                    {/* Badge Premium */}
+                    <div className="flex justify-between items-start mb-6">
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">
+                            Vignette Case
+                        </span>
                         {activeQ.type === 'premium' ? (
-                            <span className="bg-amber-100 text-amber-600 text-[10px] font-bold px-2 py-1 rounded border border-amber-200 flex items-center gap-1"><Lock size={10} /> PRO</span>
+                            <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-[10px] font-bold px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                                <Lock size={10} /> PRO QUESTION
+                            </span>
                         ) : (
-                            <span className="bg-teal-100 text-teal-600 text-[10px] font-bold px-2 py-1 rounded border border-teal-200">FREE</span>
+                            <span className="bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 text-[10px] font-bold px-3 py-1.5 rounded-full border border-teal-200 dark:border-teal-800">
+                                FREE ACCESS
+                            </span>
                         )}
                     </div>
 
                     {isLocked ? (
-                        <div className="mt-4">
-                           <div className="blur-sm select-none opacity-50 mb-8 space-y-4">
-                              <h3 className="text-lg font-medium">Soal ini dikunci...</h3>
-                              {[1,2,3,4].map(i => <div key={i} className="h-12 bg-slate-100 rounded-xl w-full"></div>)}
+                        <div className="mt-8 flex flex-col items-center justify-center text-center py-12">
+                           <div className="blur-sm select-none opacity-50 w-full mb-8 space-y-6">
+                              <h3 className="text-xl font-bold text-slate-300">Pertanyaan ini dikunci khusus member PRO...</h3>
+                              {[1,2,3,4].map(i => <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full"></div>)}
                            </div>
-                           <div className="absolute inset-0 z-10 flex items-center justify-center p-6"><PremiumLock /></div>
+                           <div className="absolute inset-0 z-10 flex items-center justify-center p-6 bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-[2.5rem]">
+                                <PremiumLock />
+                           </div>
                         </div>
                     ) : (
-                        <>
-                            <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 leading-relaxed mb-6">
+                        <div className="animate-in fade-in duration-500">
+                            {/* Pertanyaan */}
+                            <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-relaxed mb-10">
                                 {activeQ.question}
                             </h3>
 
+                            {/* Pilihan Jawaban */}
                             <div className="space-y-3">
                                 {sortedOptionKeys.map((key) => {
                                     const value = activeQ.options[key] || ""; 
@@ -238,13 +263,23 @@ export default function MateriReader() {
                                     const isCorrect = activeQ.correctAnswer.toLowerCase() === key.toLowerCase();
                                     const showResult = showExplanation[activeQ.id];
 
-                                    let btnClass = "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"; 
-                                    
+                                    // Styling Logic
+                                    let containerClass = "border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-300"; 
+                                    let iconClass = "bg-slate-100 dark:bg-slate-800 text-slate-500";
+
                                     if (showResult) {
-                                        if (isCorrect) btnClass = "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400 font-bold";
-                                        else if (isSelected) btnClass = "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-400";
+                                        if (isCorrect) {
+                                            containerClass = "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500";
+                                            iconClass = "bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200";
+                                        } else if (isSelected) {
+                                            containerClass = "bg-rose-50 dark:bg-rose-900/20 border-rose-500 text-rose-800 dark:text-rose-300 ring-1 ring-rose-500";
+                                            iconClass = "bg-rose-200 dark:bg-rose-800 text-rose-800 dark:text-rose-200";
+                                        } else {
+                                            containerClass += " opacity-50"; // Dim other options
+                                        }
                                     } else if (isSelected) {
-                                        btnClass = "border-indigo-500 bg-indigo-50 text-indigo-700 font-bold ring-1 ring-indigo-500";
+                                        containerClass = "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500 shadow-md";
+                                        iconClass = "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30";
                                     }
 
                                     return (
@@ -252,56 +287,89 @@ export default function MateriReader() {
                                             key={key}
                                             onClick={() => handleAnswer(key)}
                                             disabled={!!showResult}
-                                            className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-start gap-3 ${btnClass} active:scale-[0.98]`}
+                                            className={`w-full p-4 md:p-5 rounded-2xl border-2 text-left transition-all duration-200 flex items-start gap-4 group ${containerClass} active:scale-[0.99]`}
                                         >
-                                            <span className="uppercase font-bold text-xs mt-0.5 bg-white dark:bg-slate-950 w-6 h-6 rounded flex items-center justify-center shrink-0 shadow-sm border border-inherit">
+                                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold uppercase shrink-0 transition-colors mt-0.5 ${iconClass}`}>
                                                 {key}
                                             </span>
-                                            <span className="leading-snug flex-1">{value}</span>
-                                            {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-green-500 shrink-0" />}
-                                            {showResult && isSelected && !isCorrect && <XCircle size={20} className="ml-auto text-red-500 shrink-0" />}
+                                            <span className="leading-snug font-medium text-base md:text-lg flex-1">{value}</span>
+                                            
+                                            {/* Status Icon */}
+                                            {showResult && isCorrect && <CheckCircle size={24} className="ml-auto text-emerald-500 shrink-0 animate-in zoom-in" />}
+                                            {showResult && isSelected && !isCorrect && <XCircle size={24} className="ml-auto text-rose-500 shrink-0 animate-in zoom-in" />}
                                         </button>
                                     );
                                 })}
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
 
+                {/* PEMBAHASAN & INSIGHT (Muncul di Bawah) */}
                 {!isLocked && showExplanation[activeQ.id] && (
-                    <div className="animate-in slide-in-from-bottom-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-3xl p-6 mb-24">
-                        <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
-                            <Brain size={18} /> Pembahasan
-                        </h4>
-                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
-                            {activeQ.explanation}
-                        </p>
-                        {activeQ.insight && (
-                           <div className="mt-4 pt-4 border-t border-indigo-200/50 flex gap-3">
-                              <Sparkles size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                              <p className="text-xs font-bold text-amber-600 dark:text-amber-500 italic">Insight: "{activeQ.insight}"</p>
-                           </div>
-                        )}
+                    <div className="animate-in slide-in-from-bottom-8 mt-6 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-800 border border-indigo-100 dark:border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden shadow-lg">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-[50px]"></div>
+                        
+                        <div className="relative z-10">
+                            <h4 className="font-bold text-indigo-900 dark:text-indigo-300 mb-4 flex items-center gap-2 text-lg">
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl">
+                                    <Brain size={20} className="text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                Pembahasan Klinis
+                            </h4>
+                            <div className="text-slate-700 dark:text-slate-300 leading-relaxed text-base prose prose-indigo dark:prose-invert max-w-none">
+                                {activeQ.explanation}
+                            </div>
+                            
+                            {activeQ.insight && (
+                               <div className="mt-8 relative overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-900/10 p-6">
+                                 <div className="absolute top-0 right-0 p-16 bg-amber-400/10 rounded-full blur-2xl translate-x-1/2 -translate-y-1/2"></div>
+                                 <div className="relative z-10 flex gap-4 items-start">
+                                    <Sparkles size={24} className="text-amber-500 shrink-0 mt-1" />
+                                    <div>
+                                        <p className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1">MedPrep Insight</p>
+                                        <p className="text-slate-800 dark:text-slate-200 text-base italic font-medium leading-relaxed">"{activeQ.insight}"</p>
+                                    </div>
+                                 </div>
+                               </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 z-30 pb-6">
-         <div className="max-w-2xl mx-auto flex justify-between items-center gap-4">
-            <button onClick={prevQuestion} disabled={currentIndex === 0} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 disabled:opacity-30">
-                <ChevronLeft size={24} />
-            </button>
+      {/* --- BOTTOM NAVIGATION BAR (Floating di Bawah) --- */}
+      {!isFinished && (
+          <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-auto md:w-full md:max-w-3xl md:mx-auto z-40 flex justify-center">
+             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-2 pl-4 pr-2 rounded-full shadow-2xl flex items-center gap-4 w-full md:w-auto">
+                
+                <button 
+                    onClick={prevQuestion} 
+                    disabled={currentIndex === 0} 
+                    className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                >
+                    <ChevronLeft size={24} />
+                </button>
 
-            <button 
-                onClick={nextQuestion} 
-                className="flex-1 flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3.5 rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-all active:scale-[0.98]"
-            >
-                {currentIndex === questions.length - 1 ? 'Lihat Hasil' : 'Lanjut'} <ChevronRight size={18} />
-            </button>
-         </div>
-      </div>
+                <div className="flex-1 text-center md:w-48">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        {currentIndex + 1} dari {questions.length}
+                    </span>
+                </div>
+
+                <button 
+                    onClick={nextQuestion} 
+                    className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+                >
+                    {currentIndex === questions.length - 1 ? 'Selesai' : 'Lanjut'} 
+                    {currentIndex !== questions.length - 1 && <ChevronRight size={18} />}
+                </button>
+             </div>
+          </div>
+      )}
+
     </div>
   );
 }

@@ -1,157 +1,111 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  GraduationCap, Stethoscope, Zap, TrendingUp, 
-  ArrowRight, Brain 
+  GraduationCap, Target, Clock, ArrowRight, 
+  Activity, PlayCircle, Stethoscope 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-// Data Dummy Motivasi
-const QUOTES = [
-  "Barangsiapa menempuh jalan untuk menuntut ilmu, Allah akan mudahkan jalannya menuju Surga.",
-  "Dokter yang hebat bukan yang paling pintar, tapi yang paling gigih belajar.",
-  "Setiap satu diagnosis yang kamu pelajari hari ini, bisa menyelamatkan satu nyawa di masa depan."
-];
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
-  const [quote, setQuote] = useState('');
-  
-  // STATE PROGRESS
-  const [stats, setStats] = useState({
-    cbtCount: 0,
-    osceCount: 0,
-    flashcardMastered: 0
-  });
+  const navigate = useNavigate();
+  const firstName = currentUser?.displayName?.split(' ')[0] || 'Dokter';
 
-  useEffect(() => {
-    // 1. Random Quote
-    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-
-    // 2. Load Stats dari LocalStorage
-    const cbt = parseInt(localStorage.getItem('medprep_cbt_counter') || '0');
-    const osce = JSON.parse(localStorage.getItem('medprep_osce_completed') || '[]').length;
-    const flashcardProgress = JSON.parse(localStorage.getItem('medprep_flashcard_progress') || '{}');
-    const flashcard = Object.values(flashcardProgress).filter((item: any) => item.status === 'review').length;
-
-    setStats({ cbtCount: cbt, osceCount: osce, flashcardMastered: flashcard });
-  }, []);
-
-  // --- LOGIKA SAPAAN (Revisi Greeting) ---
-  const getFirstName = () => {
-    if (currentUser?.displayName) {
-      // Pecah spasi, ambil kata pertama
-      return currentUser.displayName.split(' ')[0];
-    }
-    // Fallback: Ambil dari email jika nama kosong
-    return currentUser?.email?.split('@')[0] || 'Sejawat';
-  };
+  // Component Kartu Statistik
+  const StatCard = ({ icon: Icon, label, value, sub, color }: any) => (
+    <div className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-20 -mr-6 -mt-6 transition-transform group-hover:scale-150 ${color}`}></div>
+        <div className="relative z-10">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${color} bg-opacity-10 text-current`}>
+                <Icon size={24} className={color.replace('bg-', 'text-')} />
+            </div>
+            <h3 className="text-3xl font-black text-slate-800 dark:text-white mb-1">{value}</h3>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</p>
+            <p className="text-xs text-slate-400 mt-2">{sub}</p>
+        </div>
+    </div>
+  );
 
   return (
-    <div className="p-6 pb-24 animate-in fade-in space-y-8 max-w-6xl mx-auto">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      {/* 1. GREETING SECTION (DENGAN NAMA DEPAN) */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">
-            {/* PANGGIL FUNGSI getFirstName() DI SINI */}
-            Assalamu'alaikum, <span className="text-indigo-200">dr. {getFirstName()}</span> 👋
-          </h1>
-          <p className="text-indigo-100 max-w-xl text-lg leading-relaxed opacity-90">
-            "{quote}"
-          </p>
+      {/* HERO SECTION (Yang sebelumnya "Blank Biru", sekarang dipercantik) */}
+      <div className="relative rounded-[2.5rem] bg-slate-900 dark:bg-black overflow-hidden p-8 md:p-12 mb-8 text-white shadow-2xl shadow-indigo-500/20">
+          {/* Background Effects */}
+          <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-blue-600 rounded-full blur-[100px] opacity-30"></div>
+          <div className="absolute bottom-0 left-0 w-[20rem] h-[20rem] bg-teal-500 rounded-full blur-[80px] opacity-20"></div>
           
-          <div className="mt-8 flex gap-4">
-            <Link to="/app/cbt" className="bg-white text-indigo-700 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg flex items-center gap-2">
-              <GraduationCap size={20} /> Latihan Soal
-            </Link>
-            <Link to="/app/flashcards" className="bg-indigo-500/30 text-white border border-white/20 px-6 py-3 rounded-xl font-bold hover:bg-indigo-500/50 transition-colors flex items-center gap-2">
-              <Zap size={20} /> Hafalan Cepat
-            </Link>
+          <div className="relative z-10 max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 border border-white/10">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span> Medical OS v1.0
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black leading-tight mb-6">
+                  Halo, dr. {firstName} <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-400">Siap Lulus UKMPPD?</span>
+              </h1>
+              <p className="text-lg text-slate-300 mb-8 font-light italic">
+                  "Barangsiapa menempuh jalan untuk menuntut ilmu, Allah akan mudahkan jalannya menuju Surga."
+              </p>
+              
+              <div className="flex flex-wrap gap-4">
+                  <button 
+                    onClick={() => navigate('/app/cbt')}
+                    className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2 shadow-lg shadow-white/10"
+                  >
+                      <PlayCircle size={20} /> Mulai Latihan
+                  </button>
+                  <button 
+                    onClick={() => navigate('/app/flashcards')}
+                    className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-2xl font-bold hover:bg-white/20 transition-all"
+                  >
+                      Buka Flashcards
+                  </button>
+              </div>
           </div>
-        </div>
       </div>
 
-      {/* 2. PROGRESS TRACKER */}
-      <div>
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-          <TrendingUp className="text-indigo-500" /> Progress Belajar Anda
-        </h2>
-        
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* STAT 1: CBT */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-indigo-500 transition-all group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <Brain size={24} />
-              </div>
-              <span className="text-xs font-bold uppercase text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Total</span>
-            </div>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-1">{stats.cbtCount}</h3>
-            <p className="text-slate-500 text-sm font-medium">Soal Telah Dikerjakan</p>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
-              <div className="bg-blue-500 h-full rounded-full" style={{ width: `${Math.min(stats.cbtCount, 100)}%` }}></div>
-            </div>
-          </div>
-
-          {/* STAT 2: FLASHCARD */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-yellow-500 transition-all group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-xl group-hover:bg-yellow-500 group-hover:text-white transition-colors">
-                <Zap size={24} />
-              </div>
-              <span className="text-xs font-bold uppercase text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Mastery</span>
-            </div>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-1">{stats.flashcardMastered}</h3>
-            <p className="text-slate-500 text-sm font-medium">Kartu Hafal Mati (Review)</p>
-             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
-              <div className="bg-yellow-500 h-full rounded-full" style={{ width: `${Math.min(stats.flashcardMastered * 2, 100)}%` }}></div>
-            </div>
-          </div>
-
-          {/* STAT 3: OSCE */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-emerald-500 transition-all group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                <Stethoscope size={24} />
-              </div>
-              <span className="text-xs font-bold uppercase text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Read</span>
-            </div>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-1">{stats.osceCount}</h3>
-            <p className="text-slate-500 text-sm font-medium">Station OSCE Dipelajari</p>
-             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
-              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(stats.osceCount * 5, 100)}%` }}></div>
-            </div>
-          </div>
-        </div>
+      {/* STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <StatCard 
+            icon={Target} value="12" label="Soal Hari Ini" sub="Target harian: 50 soal" color="bg-blue-500" 
+          />
+          <StatCard 
+            icon={Activity} value="85%" label="Akurasi" sub="Meningkat +5% minggu ini" color="bg-teal-500" 
+          />
+          <StatCard 
+            icon={Clock} value="45m" label="Waktu Belajar" sub="Fokus yang sangat baik!" color="bg-orange-500" 
+          />
       </div>
 
-      {/* 3. MENU AKSES CEPAT */}
+      {/* QUICK ACCESS (Menu Cepat) */}
       <div className="grid md:grid-cols-2 gap-6">
-         <Link to="/app/cbt" className="group relative bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all overflow-hidden">
-           <div className="absolute right-0 top-0 p-24 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-2xl translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-100 transition-colors"></div>
-           <div className="relative z-10">
-              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <GraduationCap size={24} />
+          <div onClick={() => navigate('/app/cbt')} className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:border-indigo-500/50 transition-all relative overflow-hidden">
+              <div className="absolute right-0 top-0 p-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
+              <div className="relative z-10">
+                  <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                      <GraduationCap size={28} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Bank Soal UKMPPD</h3>
+                  <p className="text-slate-500 mb-6">Ribuan soal terupdate per sistem organ.</p>
+                  <span className="flex items-center gap-2 font-bold text-indigo-600 group-hover:gap-3 transition-all">
+                      Akses Sekarang <ArrowRight size={18} />
+                  </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">CBT Center</h3>
-              <p className="text-slate-500 text-sm mb-6">Latihan soal UKMPPD dengan mode sistem, pembahasan lengkap, dan insight klinis.</p>
-              <span className="text-indigo-600 font-bold flex items-center gap-2 text-sm group-hover:gap-3 transition-all">Mulai Latihan <ArrowRight size={16}/></span>
-           </div>
-         </Link>
+          </div>
 
-         <Link to="/app/osce" className="group relative bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all overflow-hidden">
-           <div className="absolute right-0 top-0 p-24 bg-emerald-50 dark:bg-emerald-900/10 rounded-full blur-2xl translate-x-1/2 -translate-y-1/2 group-hover:bg-emerald-100 transition-colors"></div>
-           <div className="relative z-10">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Stethoscope size={24} />
+          <div onClick={() => navigate('/app/osce')} className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:border-teal-500/50 transition-all relative overflow-hidden">
+              <div className="absolute right-0 top-0 p-24 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-all"></div>
+              <div className="relative z-10">
+                  <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 text-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                      <Stethoscope size={28} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">OSCE Center</h3>
+                  <p className="text-slate-500 mb-6">Checklist & Video panduan klinis.</p>
+                  <span className="flex items-center gap-2 font-bold text-teal-600 group-hover:gap-3 transition-all">
+                      Pelajari Skill <ArrowRight size={18} />
+                  </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">OSCE Center</h3>
-              <p className="text-slate-500 text-sm mb-6">Panduan stase OSCE lengkap dari anamnesis hingga tatalaksana dengan checklist.</p>
-              <span className="text-emerald-600 font-bold flex items-center gap-2 text-sm group-hover:gap-3 transition-all">Pelajari Stase <ArrowRight size={16}/></span>
-           </div>
-         </Link>
+          </div>
       </div>
 
     </div>
