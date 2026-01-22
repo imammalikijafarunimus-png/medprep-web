@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, RotateCw, BookOpen, Brain, Beaker, Activity, Heart, Shuffle, Zap, XCircle, CheckCircle, Clock, Lock, Star, FlipHorizontal } from 'lucide-react';
+import { 
+  ChevronLeft, ChevronRight, RotateCw, BookOpen, Brain, Beaker, 
+  Activity, Heart, Shuffle, Zap, XCircle, CheckCircle, Clock, 
+  Lock, Star 
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // 1. Tambah Import Navigate
 import { FLASHCARDS } from '../data/flashcard_data';
 import { useAuth } from '../context/AuthContext';
-import PremiumLock from '../components/PremiumLock';
 import toast from 'react-hot-toast';
 
 // --- TIPE DATA ---
@@ -13,9 +17,6 @@ interface CardProgress {
   status: 'new' | 'learning' | 'review';
 }
 
-// Tambahkan type: 'free' | 'premium' di data flashcard (di file data aslinya)
-// Disini kita asumsi data FLASHCARDS sudah punya properti itu, atau kita default ke 'free'
-
 const CATEGORIES = [
   { id: 'all', label: 'Semua', icon: Shuffle },
   { id: 'farmako', label: 'Farmako & Dosis', icon: BookOpen },
@@ -25,12 +26,12 @@ const CATEGORIES = [
 ];
 
 export default function FlashcardDrill() {
+  const navigate = useNavigate(); // 2. Init Navigate
   const { currentUser } = useAuth();
+  
   const [activeCategory, setActiveCategory] = useState('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  
-  // State Progress
   const [progressData, setProgressData] = useState<{[key:string]: CardProgress}>({});
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function FlashcardDrill() {
   const currentCard = filteredCards[currentIndex];
   const cardProgress = progressData[currentCard?.id];
 
-  // LOGIKA KUNCI: (Asumsi ada properti type, jika tdk ada anggap free)
+  // LOGIKA KUNCI:
   const isLocked = (currentCard as any).type === 'premium' && currentUser?.subscriptionStatus !== 'premium';
 
   // Reset saat ganti kategori
@@ -142,8 +143,7 @@ export default function FlashcardDrill() {
 
       {/* AREA KARTU */}
       {filteredCards.length > 0 ? (
-        // Wrapper Perspective (Agar terlihat 3D) -> WAJIB ADA CLASS INI DI TAILWIND/CSS
-        // Pastikan di index.css sudah ada: .perspective-1000 { perspective: 1000px; }
+        // Wrapper Perspective (3D)
         <div className="relative h-[450px] w-full cursor-pointer group perspective-1000">
           
           <div className={`relative w-full h-full duration-500 transform-style-3d transition-all ${isFlipped ? 'rotate-y-180' : ''}`}>
@@ -195,17 +195,18 @@ export default function FlashcardDrill() {
                         </div>
                         <h3 className="text-white font-bold text-lg mb-2">Jawaban Terkunci</h3>
                         <p className="text-slate-300 text-sm mb-6 max-w-xs">Upgrade ke PRO untuk membuka kunci jawaban ini.</p>
+                        
+                        {/* --- TOMBOL UPGRADE (FIXED) --- */}
                         <button 
                             onClick={(e) => {
-                                e.stopPropagation();
-                                toast("Fitur pembayaran segera hadir!", { icon: '🚧' });
+                                e.stopPropagation(); // Stop flip balik
+                                navigate('/app/subscription'); // Arahkan ke halaman berbayar
                             }}
                             className="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-50 transition-colors flex items-center gap-2"
                         >
                             <Star size={14} fill="currentColor" className="text-orange-400"/> Upgrade Sekarang
                         </button>
                         
-                        {/* Tombol Balik Paksa */}
                         <button onClick={() => setIsFlipped(false)} className="mt-8 text-xs text-slate-400 hover:text-white underline">
                             Kembali ke Pertanyaan
                         </button>
@@ -227,7 +228,6 @@ export default function FlashcardDrill() {
                           )}
                        </div>
 
-                       {/* TOMBOL EVALUASI */}
                        <div className="w-full pt-4 border-t border-slate-600">
                           <p className="text-xs text-slate-400 mb-3 font-bold uppercase">Bagaimana ingatan Anda?</p>
                           <div className="grid grid-cols-2 gap-4">
@@ -255,7 +255,6 @@ export default function FlashcardDrill() {
           </div>
         </div>
       ) : (
-        // JIKA KOSONG
         <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
           <Zap size={48} className="mb-4 opacity-50" />
           <p>Semua kartu di kategori ini sudah dikuasai!</p>
@@ -265,7 +264,6 @@ export default function FlashcardDrill() {
         </div>
       )}
 
-      {/* CONTROLS (Hanya muncul jika BELUM dibalik / Sisi Depan) */}
       {!isFlipped && filteredCards.length > 0 && (
         <div className="flex items-center justify-center gap-6 mt-8 opacity-50 hover:opacity-100 transition-opacity">
           <button onClick={handlePrev} className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><ChevronLeft /></button>
@@ -274,7 +272,7 @@ export default function FlashcardDrill() {
         </div>
       )}
 
-      {/* CSS KHUSUS UNTUK 3D FLIP (Tempel di sini biar aman) */}
+      {/* CSS KHUSUS 3D FLIP */}
       <style>{`
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }

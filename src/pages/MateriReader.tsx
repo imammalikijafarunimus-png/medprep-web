@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, CheckCircle, XCircle, AlertCircle, 
   ChevronRight, ChevronLeft, RotateCcw, Brain, Sparkles, Lock,
-  Trophy, Target
+  Trophy
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -15,16 +15,24 @@ interface Question {
   id: string;
   system: string;
   question: string;
-  options: { [key: string]: string }; // Flexible key (bisa a/A)
+  options: { [key: string]: string };
   correctAnswer: string;
   explanation: string;
   insight?: string;
   type?: 'free' | 'premium';
+  examBatch?: string; // Tambahan field
+  examYear?: string;  // Tambahan field
 }
 
 export default function MateriReader() {
   const [searchParams] = useSearchParams();
+  
+  // AMBIL PARAMETER DARI URL
   const system = searchParams.get('system');
+  const batchParam = searchParams.get('batch'); // Nama Folder
+  const yearParam = searchParams.get('year');   // Tahun (Opsional)
+  const modeParam = searchParams.get('mode');   // 'random' atau null
+
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
@@ -40,14 +48,38 @@ export default function MateriReader() {
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!system) return;
+      setLoading(true); // Reset loading saat fetch ulang
+      
       try {
+        // 1. Ambil SEMUA soal sistem tersebut dulu
         const q = query(collection(db, "cbt_questions"), where("system", "==", system));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Question[];
+        let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Question[];
         
-        // Randomize urutan SOAL saja (Opsinya nanti diurutkan abjad di render)
-        const shuffled = data.sort(() => Math.random() - 0.5);
-        setQuestions(shuffled);
+        // 2. FILTER CLIENT-SIDE (Lebih Fleksibel)
+        if (modeParam === 'random') {
+            // Jika mode random (Drilling Acak), ambil semua tanpa filter batch
+            // Tapi acak urutannya
+            data = data.sort(() => Math.random() - 0.5);
+        } else if (batchParam) {
+            // JIKA PILIH FOLDER TERTENTU
+            data = data.filter(item => {
+                // Cek Nama Batch
+                const isBatchMatch = item.examBatch === batchParam;
+                
+                // Cek Tahun (Jika di URL ada tahun, di data harus sama. Jika tidak, data harus kosong/strip)
+                const isYearMatch = yearParam 
+                    ? item.examYear === yearParam 
+                    : (!item.examYear || item.examYear === '' || item.examYear === '-');
+
+                return isBatchMatch && isYearMatch;
+            });
+            
+            // Urutkan soal dalam folder agar konsisten (opsional, atau bisa diacak juga)
+            // data = data.sort(() => Math.random() - 0.5); 
+        }
+
+        setQuestions(data);
       } catch (err) {
         console.error(err);
         toast.error("Gagal memuat soal");
@@ -56,7 +88,7 @@ export default function MateriReader() {
       }
     };
     fetchQuestions();
-  }, [system]);
+  }, [system, batchParam, yearParam, modeParam]);
 
   const handleAnswer = (optionKey: string) => {
     const currentQ = questions[currentIndex];
@@ -67,16 +99,15 @@ export default function MateriReader() {
     setSelectedAnswers(prev => ({ ...prev, [currentQ.id]: optionKey }));
     setShowExplanation(prev => ({ ...prev, [currentQ.id]: true }));
     
-    // Update Counter di Dashboard
+    // Counter Global Dashboard
     const currentCount = parseInt(localStorage.getItem('medprep_cbt_counter') || '0');
     localStorage.setItem('medprep_cbt_counter', (currentCount + 1).toString());
 
-    // Cek Jawaban (Case Insensitive biar aman: 'a' == 'A')
     if (optionKey.toLowerCase() === currentQ.correctAnswer.toLowerCase()) {
         setScore(prev => prev + 1);
-        toast.success("Tepat Sekali! 🎯", { position: 'bottom-center', duration: 1500 });
+        toast.success("Tepat! 🎯", { position: 'bottom-center', duration: 1000 });
     } else {
-        toast.error("Kurang Tepat ❌", { position: 'bottom-center', duration: 1500 });
+        toast.error("Kurang Tepat ❌", { position: 'bottom-center', duration: 1000 });
     }
   };
 
@@ -98,23 +129,22 @@ export default function MateriReader() {
   if (questions.length === 0) return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center">
         <AlertCircle size={40} className="text-slate-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Soal Kosong</h2>
-        <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">Kembali</button>
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Folder Kosong</h2>
+        <p className="text-slate-500 mt-2 text-sm">Belum ada soal di folder <b>{batchParam}</b> ini.</p>
+        <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">Kembali</button>
       </div>
   );
 
   const activeQ = questions[currentIndex];
   const isLocked = activeQ.type === 'premium' && currentUser?.subscriptionStatus !== 'premium';
   
-  // FIX JAWABAN HILANG & ACAK:
-  // 1. Ambil semua key yang ada di database (bisa 'a', 'b' atau 'A', 'B')
-  // 2. Sort secara abjad (A, B, C...) agar urutannya selalu rapi
-  const sortedOptionKeys = Object.keys(activeQ.options).sort();
+  // Sort opsi jawaban
+  const sortedOptionKeys = activeQ.options ? Object.keys(activeQ.options).sort() : [];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 font-sans">
       
-      {/* HEADER NAVIGASI */}
+      {/* HEADER */}
       <div className="fixed top-0 left-0 right-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 px-4 h-16 flex items-center shadow-sm">
         <div className="w-full max-w-2xl mx-auto flex justify-between items-center relative">
           
@@ -123,7 +153,10 @@ export default function MateriReader() {
           </button>
           
           <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{system}</span>
+            {/* Tampilkan Nama Folder/Batch di Header agar user tau sedang di mana */}
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {yearParam ? `${batchParam} ${yearParam}` : batchParam || 'Latihan'}
+            </span>
             <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
               {currentIndex + 1} <span className="text-slate-400 text-sm">/ {questions.length}</span>
             </span>
@@ -134,17 +167,15 @@ export default function MateriReader() {
           </div>
         </div>
         
-        {/* Progress Bar */}
         <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
            <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}></div>
         </div>
       </div>
 
-      {/* --- CONTENT AREA --- */}
+      {/* CONTENT AREA */}
       <div className="pt-20 px-4 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
         
         {isFinished ? (
-            // --- LAYAR SELESAI (REVISI) ---
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 mt-4">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/30 animate-in zoom-in">
                     <Trophy size={40} />
@@ -152,10 +183,9 @@ export default function MateriReader() {
                 
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Latihan Selesai!</h2>
                 <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-                  Selamat Dok! Anda telah menyelesaikan <span className="text-slate-900 dark:text-white font-bold">{questions.length}</span> soal latihan untuk sistem {system}.
+                  Anda telah menyelesaikan folder <b>{batchParam}</b>.
                 </p>
 
-                {/* Card Skor */}
                 <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 mb-8 max-w-xs mx-auto">
                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Akurasi Jawaban</p>
                    <div className="flex items-end justify-center gap-2">
@@ -178,10 +208,7 @@ export default function MateriReader() {
             </div>
         ) : (
             <>
-                {/* --- SOAL CARD --- */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-6 relative overflow-hidden min-h-[300px]">
-                    
-                    {/* Badge Tipe */}
                     <div className="flex justify-end mb-4">
                         {activeQ.type === 'premium' ? (
                             <span className="bg-amber-100 text-amber-600 text-[10px] font-bold px-2 py-1 rounded border border-amber-200 flex items-center gap-1"><Lock size={10} /> PRO</span>
@@ -191,16 +218,14 @@ export default function MateriReader() {
                     </div>
 
                     {isLocked ? (
-                        // TAMPILAN TERKUNCI (BLUR)
                         <div className="mt-4">
                            <div className="blur-sm select-none opacity-50 mb-8 space-y-4">
-                              <h3 className="text-lg font-medium">Seorang laki-laki berusia 45 tahun datang ke IGD dengan keluhan nyeri dada kiri menjalar...</h3>
+                              <h3 className="text-lg font-medium">Soal ini dikunci...</h3>
                               {[1,2,3,4].map(i => <div key={i} className="h-12 bg-slate-100 rounded-xl w-full"></div>)}
                            </div>
                            <div className="absolute inset-0 z-10 flex items-center justify-center p-6"><PremiumLock /></div>
                         </div>
                     ) : (
-                        // TAMPILAN TERBUKA (NORMAL)
                         <>
                             <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 leading-relaxed mb-6">
                                 {activeQ.question}
@@ -208,15 +233,12 @@ export default function MateriReader() {
 
                             <div className="space-y-3">
                                 {sortedOptionKeys.map((key) => {
-                                    // Ambil isi teks opsi (Pastikan tidak undefined)
                                     const value = activeQ.options[key] || ""; 
-                                    
-                                    // Logic Warna Tombol
                                     const isSelected = selectedAnswers[activeQ.id] === key;
                                     const isCorrect = activeQ.correctAnswer.toLowerCase() === key.toLowerCase();
                                     const showResult = showExplanation[activeQ.id];
 
-                                    let btnClass = "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"; // Default
+                                    let btnClass = "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"; 
                                     
                                     if (showResult) {
                                         if (isCorrect) btnClass = "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400 font-bold";
@@ -235,9 +257,7 @@ export default function MateriReader() {
                                             <span className="uppercase font-bold text-xs mt-0.5 bg-white dark:bg-slate-950 w-6 h-6 rounded flex items-center justify-center shrink-0 shadow-sm border border-inherit">
                                                 {key}
                                             </span>
-                                            {/* PENTING: flex-1 agar teks mengisi ruang kosong & tidak hilang */}
                                             <span className="leading-snug flex-1">{value}</span>
-                                            
                                             {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-green-500 shrink-0" />}
                                             {showResult && isSelected && !isCorrect && <XCircle size={20} className="ml-auto text-red-500 shrink-0" />}
                                         </button>
@@ -248,7 +268,6 @@ export default function MateriReader() {
                     )}
                 </div>
 
-                {/* PEMBAHASAN */}
                 {!isLocked && showExplanation[activeQ.id] && (
                     <div className="animate-in slide-in-from-bottom-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-3xl p-6 mb-24">
                         <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
@@ -269,7 +288,6 @@ export default function MateriReader() {
         )}
       </div>
 
-      {/* FOOTER CONTROLS */}
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 z-30 pb-6">
          <div className="max-w-2xl mx-auto flex justify-between items-center gap-4">
             <button onClick={prevQuestion} disabled={currentIndex === 0} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 disabled:opacity-30">
