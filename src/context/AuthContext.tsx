@@ -4,22 +4,25 @@ import {
   User, 
   UserCredential, 
   GoogleAuthProvider, 
-  signInWithPopup, 
+  signInWithPopup,
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile // <--- Pastikan import ini ada
+  updateProfile // Pastikan ini diimport
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth } from '../lib/firebase'; // Sesuaikan path ini jika pakai folder lib
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
   loginWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
-  // UPDATE: Tambah parameter 'name'
   register: (email: string, password: string, name: string) => Promise<UserCredential>;
   login: (email: string, password: string) => Promise<UserCredential>;
+  
+  // --- TAMBAHAN PENTING ---
+  // Kita expose fungsi ini agar bisa dipakai di halaman Profile
+  updateUserProfile: (name: string) => Promise<void>; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,18 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await signInWithPopup(auth, provider);
   };
 
-  // --- FUNGSI REGISTER (UPDATED) ---
   const register = async (email: string, password: string, name: string) => {
     // 1. Buat Akun
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
     // 2. Langsung Update Nama Lengkap ke Profil Firebase
-    await updateProfile(userCredential.user, {
-      displayName: name
-    });
-
-    // 3. Update state lokal biar langsung berubah di layar tanpa refresh
-    setCurrentUser({ ...userCredential.user, displayName: name });
+    if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+            displayName: name
+        });
+        // Update state lokal agar UI langsung berubah tanpa refresh
+        setCurrentUser({ ...userCredential.user, displayName: name });
+    }
 
     return userCredential;
   };
@@ -63,6 +66,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await signOut(auth);
+  };
+
+  // --- FUNGSI BARU: UPDATE PROFIL (STANDALONE) ---
+  const updateUserProfile = async (name: string) => {
+    // Cek apakah ada user yang sedang login di Firebase
+    if (auth.currentUser) {
+        // Update di Server Firebase
+        await updateProfile(auth.currentUser, {
+            displayName: name
+        });
+
+        // Update di State Lokal React (PENTING)
+        // Kita harus force update object currentUser agar React me-render ulang nama baru di Dashboard
+        setCurrentUser({ ...auth.currentUser, displayName: name });
+    } else {
+        throw new Error("Tidak ada user yang login");
+    }
   };
 
   useEffect(() => {
@@ -79,7 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loginWithGoogle,
     logout,
     register,
-    login
+    login,
+    updateUserProfile // Jangan lupa masukkan ke sini
   };
 
   return (

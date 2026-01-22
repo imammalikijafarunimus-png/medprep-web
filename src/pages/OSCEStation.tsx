@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, Brain, Droplet, Wind, Heart, Utensils, Baby, Zap, Shield, 
   Activity, Sun, Smile, Eye, CheckCircle, ChevronRight, Mic, 
   BookOpen, Search, Flame, Stethoscope, LayoutGrid, 
-  ChevronDown, Sparkles, Siren
+  ChevronDown, Sparkles, Siren, BookmarkCheck // Tambah icon BookmarkCheck
 } from 'lucide-react';
 import { STATION_DATA, SYSTEM_LIST, CaseStudy, OSCESection } from '../data/osce_data';
+import toast from 'react-hot-toast'; // 1. IMPORT TOAST
 
 type ViewState = 'HOME' | 'MENU' | 'CHECKLIST_MODE' | 'CASE_LIBRARY' | 'CASE_DETAIL';
 
@@ -17,6 +18,30 @@ export default function OSCEStation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [scriptMode, setScriptMode] = useState(true);
   const [expandedSections, setExpandedSections] = useState<{[key:number]: boolean}>({});
+  
+  // 2. STATE BARU UNTUK PROGRESS
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  // --- 3. EFEK UNTUK CEK STATUS SELESAI SAAT KASUS DIBUKA ---
+  useEffect(() => {
+    if (activeCase) {
+      const completedList = JSON.parse(localStorage.getItem('medprep_osce_completed') || '[]');
+      setIsCompleted(completedList.includes(activeCase.id));
+    }
+  }, [activeCase]);
+
+  // --- 4. FUNGSI TANDAI SELESAI ---
+  const markAsCompleted = () => {
+    if (!activeCase) return;
+    
+    const completedList = JSON.parse(localStorage.getItem('medprep_osce_completed') || '[]');
+    if (!completedList.includes(activeCase.id)) {
+      completedList.push(activeCase.id);
+      localStorage.setItem('medprep_osce_completed', JSON.stringify(completedList));
+      setIsCompleted(true);
+      toast.success("Kasus ditandai selesai! Progress disimpan.", { icon: '🎉' });
+    }
+  };
 
   // --- HELPERS ---
   const currentStation = activeStationId && STATION_DATA[activeStationId] 
@@ -35,7 +60,7 @@ export default function OSCEStation() {
     return <Icon size={40} />;
   };
 
-  // --- SUB-COMPONENTS: LEGO RENDERERS (YANG HILANG DIKEMBALIKAN) ---
+  // --- SUB-COMPONENTS: LEGO RENDERERS ---
 
   // 1. Lego: Checklist Biasa
   const RenderChecklist = ({ section }: { section: any }) => (
@@ -72,7 +97,7 @@ export default function OSCEStation() {
     </div>
   );
 
-  // 2. Lego: Anamnesis Standar (DIKEMBALIKAN)
+  // 2. Lego: Anamnesis Standar
   const RenderStandardAnamnesis = ({ data }: { data: any }) => (
     <div className="grid md:grid-cols-2 gap-4">
       <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/30">
@@ -106,7 +131,7 @@ export default function OSCEStation() {
     </div>
   );
 
-  // 3. Lego: Psikiatri (DIKEMBALIKAN)
+  // 3. Lego: Psikiatri
   const RenderPsychiatry = ({ data }: { data: any }) => (
     <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-800 rounded-xl p-4">
        <div className="flex items-center gap-2 mb-4 text-violet-600 dark:text-violet-400 font-bold">
@@ -129,7 +154,7 @@ export default function OSCEStation() {
     </div>
   );
 
-  // 4. Lego: Pediatri (DIKEMBALIKAN)
+  // 4. Lego: Pediatri
   const RenderPediatric = ({ data }: { data: any }) => (
     <div className="bg-pink-50 dark:bg-pink-900/10 border border-pink-100 dark:border-pink-800 rounded-xl p-4">
        <div className="flex items-center gap-2 mb-4 text-pink-600 dark:text-pink-400 font-bold">
@@ -152,7 +177,6 @@ export default function OSCEStation() {
     </div>
   );
 
-  // LOGIKA SWITCHER (PENTING AGAR TIDAK BLANK)
   const renderSectionContent = (section: OSCESection) => {
     switch (section.type) {
       case 'standard_anamnesis': return <RenderStandardAnamnesis data={section.data} />;
@@ -238,7 +262,7 @@ export default function OSCEStation() {
   }
 
   // ==========================================
-  // VIEW 3: CHECKLIST MODE (FIXED)
+  // VIEW 3: CHECKLIST MODE
   // ==========================================
   if (view === 'CHECKLIST_MODE') {
     return (
@@ -334,7 +358,6 @@ export default function OSCEStation() {
   // ==========================================
   if (view === 'CASE_DETAIL' && activeCase) {
     const hasNewFormat = activeCase.content.tatalaksana && activeCase.content.diagnosis;
-
     return (
       <div className="animate-in slide-in-from-bottom h-full flex flex-col bg-slate-950 overflow-hidden">
         <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-30">
@@ -342,7 +365,19 @@ export default function OSCEStation() {
             <ArrowLeft size={20} />
           </button>
           <h2 className="text-sm font-bold text-slate-200 line-clamp-1">{activeCase.title}</h2>
-          <div className="w-10"></div>
+          
+          {/* 5. TOMBOL TANDAI SELESAI (NEW FEATURE) */}
+          <button 
+            onClick={markAsCompleted}
+            disabled={isCompleted}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              isCompleted 
+              ? 'bg-green-500/20 text-green-400 border border-green-500/50 cursor-default' 
+              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
+            }`}
+          >
+            {isCompleted ? <><CheckCircle size={14}/> Selesai</> : <><BookmarkCheck size={14}/> Tandai Selesai</>}
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar pb-24 max-w-3xl mx-auto w-full space-y-10">
@@ -386,7 +421,7 @@ export default function OSCEStation() {
                    <div className="bg-white/50 p-3 rounded-lg">
                       <p className="text-xs font-bold uppercase mb-1 text-slate-600">Edukasi:</p>
                       <ul className="list-disc list-inside text-xs text-slate-800">
-                         {activeCase.content.tatalaksana.non_farmakologi.map((edu: string, i: number) => <li key={i}>{edu}</li>)}
+                          {activeCase.content.tatalaksana.non_farmakologi.map((edu: string, i: number) => <li key={i}>{edu}</li>)}
                       </ul>
                    </div>
                 </div>
@@ -395,7 +430,7 @@ export default function OSCEStation() {
                    <div className="absolute top-0 right-0 p-20 bg-orange-500/5 rounded-full blur-3xl"></div>
                    <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-3 text-orange-400"><Flame size={18} fill="currentColor" /><h4 className="font-bold uppercase text-xs tracking-widest">OSCE Pro Tip</h4></div>
-                      <p className="text-slate-300 leading-relaxed text-sm italic">"{activeCase.content.osce_tip}"</p>
+                      <p className="text-slate-300 leading-relaxed text-sm italic">\"{activeCase.content.osce_tip}\"</p>
                    </div>
                 </div>
              </>

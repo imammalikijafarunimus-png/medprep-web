@@ -1,83 +1,90 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { IslamicModeProvider } from './context/IslamicModeContext';
+import { Toaster } from 'react-hot-toast';
+
+// Context Providers
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import Layout from './components/Layout/Layout';
+import { IslamicModeProvider } from './context/IslamicModeContext';
 
-// --- PAGES IMPORT ---
+// Layout & Components
+import Layout from './components/Layout/Layout';
+import PrivateRoute from './components/PrivateRoute'; // Import dari komponen yang baru dibuat
+
+// Pages
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import AdminPanel from './pages/AdminPanel';
-
-// Fitur Skill & Drill
+import CBTCenter from './pages/CBTSelection';
+import MateriViewer from './pages/MaterialViewer';
+import MateriReader from './pages/MateriReader';
 import OSCEStation from './pages/OSCEStation';
 import FlashcardDrill from './pages/FlashcardDrill';
-
-// Fitur CBT Center (New Structure)
-import CBTSelection from './pages/CBTSelection';   // Menu Pilih Sistem
-import MaterialViewer from './pages/MaterialViewer'; // Baca Materi
-import MateriReader from './pages/MateriReader';     // Latihan Soal (Quiz)
+import UserProfile from './pages/Profile';
+import AdminDashboard from './pages/AdminPanel';
 
 function App() {
   return (
-    // 1. Provider Mode Islam (Global Context)
-    <IslamicModeProvider>
-      <ThemeProvider> {/* <--- Bungkus di sini */}
-      {/* 2. Provider Auth (Pembungkus Login/Register) */}
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <IslamicModeProvider>
+          <Router>
+            <Routes>
+              {/* 1. PUBLIC ROUTES */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-        <Router>
-          <Routes>
-            {/* =========================================
-                1. PUBLIC ROUTES (Halaman Depan)
-               ========================================= */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+              {/* 2. PROTECTED APP ROUTES */}
+              <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                
+                {/* Redirect /app ke /app/dashboard */}
+                <Route index element={<Navigate to="/app/dashboard" replace />} />
+                
+                <Route path="dashboard" element={<Dashboard />} />
+                
+                {/* CBT Routes */}
+                <Route path="cbt" element={<CBTCenter />} />
+                <Route path="cbt/read" element={<MateriViewer />} />
+                <Route path="cbt/quiz" element={<MateriReader />} />
+                
+                {/* Skill & Drill Routes */}
+                <Route path="osce" element={<OSCEStation />} />
+                <Route path="flashcards" element={<FlashcardDrill />} />
+                
+                {/* User Routes */}
+                <Route path="profile" element={<UserProfile />} />
+                <Route path="admin" element={<AdminDashboard />} />
+                
+              </Route>
 
-            {/* =========================================
-                2. APP ROUTES (Halaman Dalam / Protected)
-               ========================================= */}
-            <Route path="/app" element={<Layout />}>
-              
-              {/* Dashboard Utama */}
-              <Route index element={<Dashboard />} />
-              
-              {/* --- CBT CENTER ROUTES (NEW) --- */}
-              {/* 1. Menu Utama CBT (Pilih Sistem) */}
-              <Route path="cbt" element={<CBTSelection />} />
-              {/* 2. Mode Baca Materi (High Yield) */}
-              <Route path="cbt/read" element={<MaterialViewer />} />
-              {/* 3. Mode Latihan Soal (Quiz) */}
-              <Route path="cbt/quiz" element={<MateriReader />} />
-              
-              {/* --- SKILL & DRILL ROUTES --- */}
-              <Route path="osce" element={<OSCEStation />} />
-              <Route path="flashcards" element={<FlashcardDrill />} />
-              
-              {/* --- USER ROUTES --- */}
-              <Route path="profile" element={<Profile />} />
+              {/* 3. FALLBACK */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
 
-              {/* --- ADMIN ROUTE --- */}
-              <Route path="admin" element={<AdminPanel />} />
-              
-            </Route>
-
-            {/* =========================================
-                3. FALLBACK (Jika Link Salah -> Ke Home)
-               ========================================= */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-
-          </Routes>
-        </Router>
-
-      </AuthProvider>
+            {/* Toast Notification */}
+            <Toaster 
+              position="top-center" 
+              reverseOrder={false}
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#1e293b',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  border: '1px solid #334155',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                },
+                success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+                error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+              }} 
+            />
+          </Router>
+        </IslamicModeProvider>
       </ThemeProvider>
-    </IslamicModeProvider>
+    </AuthProvider>
   );
 }
 
