@@ -3,10 +3,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutGrid, GraduationCap, Stethoscope, Zap, User, 
   Sun, Moon, BookOpen, Search, Bell, LogOut, ChevronRight,
-  Menu, ShieldCheck, Settings
+  Menu, ShieldCheck, Settings,
+  Brain
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import toast from 'react-hot-toast'; // 1. IMPORT TOAST
+import toast from 'react-hot-toast';
 
 export default function Layout() {
   const { currentUser, logout } = useAuth(); 
@@ -40,11 +41,11 @@ export default function Layout() {
   // --- DYNAMIC TITLE ---
   const getPageTitle = () => {
       const path = location.pathname;
-      if (path.includes('/dashboard')) return 'Dashboard Overview';
+      if (path.includes('/dashboard')) return 'Dashboard';
       if (path.includes('/cbt')) return 'CBT Center';
       if (path.includes('/osce')) return 'OSCE Center';
-      if (path.includes('/flashcards')) return 'Flashcards Drill';
-      if (path.includes('/profile')) return 'Profil Saya';
+      if (path.includes('/flashcards')) return 'Flashcards';
+      if (path.includes('/profile')) return 'Profil';
       if (path.includes('/admin')) return 'Admin Panel';
       return 'MedPrep';
   };
@@ -52,26 +53,19 @@ export default function Layout() {
   // --- NAVIGATION LIST ---
   const navItems = [
     { icon: LayoutGrid, label: 'Dashboard', path: '/app/dashboard' },
-    { icon: GraduationCap, label: 'CBT Center', path: '/app/cbt' },
+    { icon: Brain, label: 'CBT Center', path: '/app/cbt' },
     { icon: Stethoscope, label: 'OSCE Center', path: '/app/osce' },
     { icon: Zap, label: 'Flashcards', path: '/app/flashcards' },
     { icon: User, label: 'Profil Saya', path: '/app/profile' },
   ];
 
-  // --- 2. LOGIKA LOGOUT DENGAN TOAST ---
   const handleLogout = async () => {
       if(confirm('Apakah Anda yakin ingin keluar?')) {
-          // Tampilkan Toast
           toast.success('Berhasil keluar. Sampai jumpa lagi, Dok! 👋', {
               duration: 2000,
               style: { borderRadius: '10px', background: '#333', color: '#fff' }
           });
-          
-          // Beri jeda sedikit agar toast terbaca, lalu redirect
-          setTimeout(() => {
-              // logout(); // Gunakan ini jika context auth sudah jalan
-              navigate('/login'); 
-          }, 1000);
+          setTimeout(() => { navigate('/login'); }, 1000);
       }
   };
 
@@ -80,8 +74,8 @@ export default function Layout() {
       ${theme === 'read' ? 'bg-[#fbf6e9] text-[#433422]' : 'bg-slate-50 dark:bg-[#0B1120] dark:text-slate-100'}`}>
       
       {/* ================= DESKTOP SIDEBAR (Floating Glass) ================= */}
-      <aside className="hidden md:flex fixed top-4 bottom-4 left-4 w-72 rounded-[2.5rem] 
-        bg-white/90 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/40 dark:border-white/5 shadow-2xl shadow-slate-200/50 dark:shadow-black/50
+      <aside className="hidden md:flex fixed top-6 bottom-6 left-6 w-72 rounded-[2.5rem] 
+        bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/40 dark:border-white/5 shadow-2xl shadow-slate-200/50 dark:shadow-black/50
         flex-col py-8 px-6 z-50">
         
         {/* Brand */}
@@ -96,7 +90,7 @@ export default function Layout() {
         </div>
 
         {/* Nav Menu */}
-        <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2">
             {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
@@ -142,11 +136,13 @@ export default function Layout() {
       </aside>
 
       {/* ================= MAIN CONTENT WRAPPER ================= */}
-      <div className="flex flex-col min-h-screen md:pl-80 pr-4 py-4 relative transition-all">
+      {/* UPDATE: padding left md:pl-[22rem] agar ada jarak lega dari sidebar */}
+      <div className="flex flex-col min-h-screen md:pl-[22rem] pr-6 py-6 relative transition-all">
         
-        {/* HEADER */}
-        <header className="sticky top-0 z-40 mb-6 mx-auto w-full max-w-7xl">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-white/5 rounded-[2rem] px-6 py-3 flex items-center justify-between shadow-sm">
+        {/* HEADER (FLOATING CENTERED CAPSULE) */}
+        {/* UPDATE: sticky top-6, max-w-5xl, mx-auto -> Header melayang di tengah */}
+        <header className="sticky top-6 z-40 mb-8 mx-3 w-full max-w-5xl">
+            <div className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/40 dark:border-white/5 rounded-full px-6 py-3 flex items-center justify-between shadow-xl shadow-slate-200/20 dark:shadow-black/20 transition-all hover:bg-white/80 dark:hover:bg-slate-900/80">
                 
                 {/* Mobile Title */}
                 <div className="md:hidden flex items-center gap-2">
@@ -155,45 +151,45 @@ export default function Layout() {
 
                 {/* Left Side: Page Title */}
                 <div className="hidden md:block">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-3">
                         {getPageTitle()} 
                     </h2>
                 </div>
 
                 {/* Right Side: Tools */}
-                <div className="flex items-center gap-2 md:gap-4 ml-auto">
+                <div className="flex items-center gap-2 md:gap-3 ml-auto">
                     {/* Theme Toggle */}
                     <button 
                         onClick={toggleTheme}
-                        className="w-10 h-10 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform shadow-sm text-slate-500 dark:text-slate-300"
+                        className="w-9 h-9 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform shadow-sm text-slate-500 dark:text-slate-300"
                     >
                         {getThemeIcon()}
                     </button>
 
                     {/* Notification */}
-                    <button className="w-10 h-10 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform shadow-sm relative text-slate-500 dark:text-slate-300">
-                        <Bell size={18} />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                    <button className="w-9 h-9 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform shadow-sm relative text-slate-500 dark:text-slate-300">
+                        <Bell size={16} />
+                        <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                     </button>
 
-                    <div className="h-8 w-[1px] bg-slate-200 dark:bg-white/10 mx-1"></div>
+                    <div className="h-6 w-[1px] bg-slate-300 dark:bg-white/10 mx-2"></div>
 
-                    {/* User Profile (Identitas + Dropdown) */}
-                    <div className="flex items-center gap-3 pl-2 relative">
+                    {/* User Profile */}
+                    <div className="flex items-center gap-3 pl-1 relative">
                         <div className="text-right hidden md:block">
-                            <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
-                                {currentUser?.displayName || 'Dokter'}
+                            <p className="text-xs font-bold text-slate-800 dark:text-white leading-tight">
+                                {currentUser?.displayName?.split(' ')[0] || 'Dokter'}
                             </p>
-                            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                Univ. Muhammadiyah Surakarta
+                            <p className="text-[9px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                UMS
                             </p>
                         </div>
                         
-                        {/* --- AVATAR CLICKABLE --- */}
+                        {/* Avatar Toggle */}
                         <div className="relative">
                             <button 
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-400 to-blue-500 p-[2px] cursor-pointer hover:scale-105 transition-transform shadow-md focus:outline-none"
+                                className="w-9 h-9 rounded-full bg-gradient-to-tr from-teal-400 to-blue-500 p-[2px] cursor-pointer hover:scale-105 transition-transform shadow-md focus:outline-none"
                             >
                                 <img 
                                     src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.displayName}&background=random`} 
@@ -202,7 +198,7 @@ export default function Layout() {
                                 />
                             </button>
 
-                            {/* DROPDOWN MENU */}
+                            {/* Dropdown Menu */}
                             {isProfileOpen && (
                                 <>
                                     <div 
@@ -210,22 +206,19 @@ export default function Layout() {
                                         onClick={() => setIsProfileOpen(false)}
                                     ></div>
 
-                                    <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                        <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-white/5">
+                                    <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-white/5">
                                             <p className="text-sm font-bold text-slate-800 dark:text-white">{currentUser?.displayName}</p>
                                             <p className="text-xs text-slate-500 truncate">{currentUser?.email}</p>
-                                            <span className="mt-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-[10px] font-bold rounded border border-indigo-200 dark:border-indigo-800 uppercase">
-                                                {currentUser?.subscriptionStatus || 'FREE'} Member
+                                            <span className="mt-3 inline-block px-3 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-[10px] font-black rounded-full border border-indigo-200 dark:border-indigo-800 uppercase tracking-wider">
+                                                {currentUser?.subscriptionStatus || 'FREE'}
                                             </span>
                                         </div>
-                                        
                                         <div className="p-2">
-                                            <button onClick={() => navigate('/app/profile')} className="w-full text-left px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center gap-2 transition-colors">
+                                            <button onClick={() => navigate('/app/profile')} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl flex items-center gap-3 transition-colors">
                                                 <Settings size={16} /> Pengaturan Akun
                                             </button>
-                                            
-                                            {/* TOMBOL LOGOUT (UPDATED) */}
-                                            <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl flex items-center gap-2 transition-colors font-medium">
+                                            <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl flex items-center gap-3 transition-colors">
                                                 <LogOut size={16} /> Keluar Aplikasi
                                             </button>
                                         </div>
@@ -238,25 +231,27 @@ export default function Layout() {
             </div>
         </header>
 
-        {/* CONTENT */}
-        <main className="flex-1 w-full max-w-7xl mx-auto pb-24 md:pb-0">
+        {/* CONTENT CENTERED */}
+        {/* UPDATE: max-w-5xl dan mx-auto memastikan konten di tengah area kanan, seimbang kiri-kanan */}
+        <main className="flex-1 w-full max-w-5xl mx-3 pb-24 md:pb-0">
             <Outlet />
         </main>
 
       </div>
 
-      {/* MOBILE NAV */}
-      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-[2rem] shadow-2xl z-50 px-6 py-4 flex justify-between items-center">
+      {/* ================= MOBILE BOTTOM NAVIGATION (Hyper Glass) ================= */}
+      {/* UPDATE: Opacity lebih rendah (60-80%) dan Blur lebih tinggi untuk efek kaca nyata */}
+      <nav className="md:hidden fixed bottom-6 left-6 right-6 bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-[2.5rem] shadow-2xl z-50 px-6 py-4 flex justify-between items-center ring-1 ring-white/20">
           {navItems.slice(0, 5).map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               return (
                   <button 
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-blue-600 dark:text-teal-400 scale-110' : 'text-slate-400'}`}
+                    className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-blue-600 dark:text-teal-400 scale-110 -translate-y-1' : 'text-slate-400 hover:text-slate-600'}`}
                   >
-                      <item.icon size={isActive ? 24 : 22} strokeWidth={isActive ? 2.5 : 2} />
-                      {isActive && <span className="w-1 h-1 rounded-full bg-current mt-1"></span>}
+                      <item.icon size={isActive ? 26 : 24} strokeWidth={isActive ? 2.5 : 2} />
+                      {isActive && <span className="w-1 h-1 rounded-full bg-current mt-1 shadow-[0_0_10px_currentColor]"></span>}
                   </button>
               )
           })}

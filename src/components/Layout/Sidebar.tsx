@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'; // 1. Pastikan import useNavigate
-import { LayoutDashboard, GraduationCap, Stethoscope, Zap, User, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Stethoscope, Zap, User, LogOut, ShieldCheck, BrainCircuit, Brain } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { isAdmin } from '../../config/admin_list';
 
@@ -22,7 +22,7 @@ export default function Sidebar() {
   const menuItems = [
     // Pastikan path dashboard sudah benar
     { icon: LayoutDashboard, label: 'Dashboard', path: '/app/dashboard' },
-    { icon: GraduationCap, label: 'CBT Center', path: '/app/cbt' },
+    { icon: Brain, label: 'CBT Center', path: '/app/cbt' },
     { icon: Stethoscope, label: 'OSCE Center', path: '/app/osce' },
     { icon: Zap, label: 'Flashcards', path: '/app/flashcards' },
     { icon: User, label: 'Profil Saya', path: '/app/profile' },

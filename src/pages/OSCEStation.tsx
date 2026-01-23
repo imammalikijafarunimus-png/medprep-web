@@ -4,21 +4,25 @@ import {
   Activity, Sun, Smile, Eye, CheckCircle, ChevronRight, Mic, 
   BookOpen, Search, Flame, Stethoscope, LayoutGrid, 
   ChevronDown, Sparkles, Siren, BookmarkCheck, Info,
-  Thermometer, Pill, FileText, ClipboardList, PenTool
+  Thermometer, Pill, FileText, ClipboardList, PenTool,
+  BarChart2, Library, FolderOpen, Layers
 } from 'lucide-react';
 import { STATION_DATA, SYSTEM_LIST, CaseStudy, OSCESection } from '../data/osce_data';
 import toast from 'react-hot-toast';
 
-type ViewState = 'HOME' | 'MENU' | 'CHECKLIST_MODE' | 'CASE_LIBRARY' | 'CASE_DETAIL';
+// VIEW STATE NAVIGATION
+type ViewState = 'HOME' | 'MODE_SELECT' | 'CHECKLIST_TOPIC_SELECT' | 'CHECKLIST_RUN' | 'CASE_LIBRARY' | 'CASE_DETAIL';
 
 export default function OSCEStation() {
   // --- STATE ---
   const [view, setView] = useState<ViewState>('HOME');
   const [activeStationId, setActiveStationId] = useState<string | null>(null);
   const [activeCase, setActiveCase] = useState<CaseStudy | null>(null);
+  const [activeSectionIdx, setActiveSectionIdx] = useState<number | null>(null); // Untuk pilih topik ceklis
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [scriptMode, setScriptMode] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<{[key:number]: boolean}>({});
+  const [expandedSections, setExpandedSections] = useState<{[key:number]: boolean}>({}); // Utk checklist items
   const [isCompleted, setIsCompleted] = useState(false);
 
   // --- EFEK PROGRESS ---
@@ -51,10 +55,9 @@ export default function OSCEStation() {
     return <Icon size={size} />;
   };
 
-  // --- SUB-COMPONENTS (LEGO BLOCKS) ---
+  // --- RENDERERS (SUB-COMPONENTS) ---
 
-  // 1. Checklist Renderer
-  const RenderChecklist = ({ section }: { section: any }) => (
+  const RenderChecklistItems = ({ section }: { section: any }) => (
     <div className="space-y-4">
       {section.items?.map((item: any, idx: number) => (
         <div key={idx} className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-5 rounded-2xl flex gap-4 hover:border-teal-500/30 hover:shadow-lg hover:shadow-teal-500/5 transition-all">
@@ -90,105 +93,14 @@ export default function OSCEStation() {
     </div>
   );
 
-  // 2. Standard Anamnesis
-  const RenderStandardAnamnesis = ({ data }: { data: any }) => (
-    <div className="grid md:grid-cols-2 gap-4">
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-3xl border border-blue-100 dark:border-blue-800/30">
-        <h4 className="font-black text-blue-700 dark:text-blue-300 text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-          <Activity size={16} /> RPS (Sacred Seven)
-        </h4>
-        <div className="bg-white dark:bg-blue-950/50 p-3 rounded-xl border border-blue-100 dark:border-blue-900/20 mb-3">
-            <p className="font-bold text-slate-800 dark:text-slate-100 text-base">"{data.keluhan_utama}"</p>
-        </div>
-        <ul className="list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1 pl-1">
-          {data.rps?.map((item: string, i: number) => <li key={i}>{item}</li>)}
-        </ul>
-      </div>
-      <div className="space-y-4">
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800">
-          <h4 className="font-bold text-slate-400 text-xs mb-3 uppercase tracking-widest">Riwayat Dahulu</h4>
-          <div className="flex flex-wrap gap-2">
-            {data.rpd?.map((item: string, i: number) => (
-              <span key={i} className="text-xs bg-slate-100 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 font-medium">{item}</span>
-            ))}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800">
-           <h4 className="font-bold text-slate-400 text-xs mb-3 uppercase tracking-widest">Riwayat Keluarga</h4>
-           <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{data.rpk?.join(', ')}</p>
-        </div>
-      </div>
-      {scriptMode && data.script && (
-         <div className="md:col-span-2 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl text-sm italic text-amber-800 dark:text-amber-200 border border-amber-100 dark:border-amber-900/30 flex gap-3 shadow-sm">
-            <Mic size={18} className="shrink-0 mt-0.5" /> 
-            <span><strong>Contoh:</strong> "{data.script}"</span>
-         </div>
-      )}
-    </div>
-  );
-
-  // 3. Psychiatry
-  const RenderPsychiatry = ({ data }: { data: any }) => (
-    <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-800/30 rounded-3xl p-5">
-       <div className="flex items-center gap-2 mb-4 text-violet-700 dark:text-violet-300 font-bold">
-         <Brain size={20} /> Status Mental
-       </div>
-       <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-violet-100 dark:border-violet-900/30">
-             <span className="block font-bold text-violet-500 text-xs uppercase mb-1">Penampilan</span>
-             <p className="text-slate-700 dark:text-slate-300">{data.penampilan?.join(', ')}</p>
-          </div>
-          <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-violet-100 dark:border-violet-900/30">
-             <span className="block font-bold text-violet-500 text-xs uppercase mb-1">Persepsi</span>
-             <p className="text-slate-700 dark:text-slate-300">{data.persepsi?.join(', ')}</p>
-          </div>
-          <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-violet-100 dark:border-violet-900/30 col-span-2">
-             <span className="block font-bold text-violet-500 text-xs uppercase mb-1">Isi Pikir</span>
-             <p className="text-slate-700 dark:text-slate-300">{data.pikiran?.join(', ')}</p>
-          </div>
-       </div>
-    </div>
-  );
-
-  // 4. Pediatric
-  const RenderPediatric = ({ data }: { data: any }) => (
-    <div className="bg-pink-50 dark:bg-pink-900/10 border border-pink-100 dark:border-pink-800/30 rounded-3xl p-5">
-       <div className="flex items-center gap-2 mb-4 text-pink-600 dark:text-pink-300 font-bold">
-         <Baby size={20} /> Riwayat Kehamilan & Anak
-       </div>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-pink-100 dark:border-pink-900/20">
-            <p className="text-xs font-bold text-pink-500 uppercase mb-2">Prenatal</p>
-            <ul className="list-disc list-inside text-slate-700 dark:text-slate-300 space-y-1">
-               {data.prenatal?.map((x:string, i:number) => <li key={i}>{x}</li>)}
-            </ul>
-         </div>
-         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-pink-100 dark:border-pink-900/20">
-            <p className="text-xs font-bold text-pink-500 uppercase mb-2">Imunisasi</p>
-            <ul className="list-disc list-inside text-slate-700 dark:text-slate-300 space-y-1">
-               {data.postnatal?.map((x:string, i:number) => <li key={i}>{x}</li>)}
-            </ul>
-         </div>
-       </div>
-    </div>
-  );
-
-  const renderSectionContent = (section: OSCESection) => {
-    switch (section.type) {
-      case 'standard_anamnesis': return <RenderStandardAnamnesis data={section.data} />;
-      case 'psychiatry_status': return <RenderPsychiatry data={section.data} />;
-      case 'pediatric_history': return <RenderPediatric data={section.data} />;
-      case 'checklist': return <RenderChecklist section={section} />;
-      default: return <div className="text-red-500">Tipe data tidak dikenali</div>;
-    }
-  };
-
   // ==========================================
-  // VIEW 1: HOME
+  // VIEW 1: HOME (iOS Clean Style + Special Sections)
   // ==========================================
   if (view === 'HOME') {
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+        
+        {/* HERO HEADER */}
         <div className="relative bg-slate-900 dark:bg-black rounded-[2.5rem] p-8 md:p-10 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none">
           <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px]"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-600/20 rounded-full blur-[60px]"></div>
@@ -201,50 +113,94 @@ export default function OSCEStation() {
                 <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">OSCE Center</h1>
              </div>
              <p className="text-slate-400 text-sm md:text-base max-w-xl leading-relaxed">
-               Simulasi ujian keterampilan klinis (OSCE) dengan panduan lengkap, checklist interaktif, dan skenario kasus nyata.
+               Pusat simulasi klinis. Pilih stase untuk mengakses checklist tindakan dan bedah kasus komprehensif.
              </p>
           </div>
         </div>
 
+        {/* GRID STASE (CLEAN STYLE) */}
         <div>
           <h3 className="text-slate-800 dark:text-white font-bold text-lg mb-6 flex items-center gap-2 px-1">
             <span className="w-1.5 h-6 rounded-full bg-teal-500"></span> Pilih Stase Klinis
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {SYSTEM_LIST.map((sys) => (
               <button
                 key={sys.id}
-                onClick={() => { setActiveStationId(sys.id); setView('MENU'); }}
-                className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 h-40 rounded-[2rem] flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 hover:border-teal-500/30"
+                onClick={() => { setActiveStationId(sys.id); setView('MODE_SELECT'); }}
+                className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-4 h-24 rounded-[1.5rem] flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 hover:border-teal-500/30"
               >
-                <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all duration-300 mb-4 shadow-sm group-hover:scale-110 
-                    ${sys.id === 'gadar' 
-                        ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' 
-                        : 'bg-slate-50 text-slate-500 group-hover:bg-teal-50 group-hover:text-teal-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-teal-900/20 dark:group-hover:text-teal-400'}`
-                }>
-                  {getIcon(sys.icon, 32)}
-                </div>
-                <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-50/50 to-transparent dark:from-teal-900/10 opacity-0 group-hover:opacity-100 rounded-[1.5rem] transition-opacity"></div>
+                
+                {/* No Big Icon, Just Text for Clean Look as requested */}
+                <h3 className={`font-bold text-sm transition-colors relative z-10 ${sys.id === 'gadar' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300 group-hover:text-teal-600 dark:group-hover:text-teal-400'}`}>
                     {sys.label}
                 </h3>
               </button>
             ))}
           </div>
         </div>
+
+        {/* SPECIAL SECTIONS (3 KOTAK BAWAH) */}
+        <div>
+            <h3 className="text-slate-800 dark:text-white font-bold text-lg mb-6 flex items-center gap-2 px-1">
+                <span className="w-1.5 h-6 rounded-full bg-indigo-500"></span> Resource Tambahan
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+                
+                {/* Card 1: Rekap Kasus */}
+                <div className="group relative bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer overflow-hidden shadow-sm hover:shadow-xl">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10">
+                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                            <FolderOpen size={24} />
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Rekap Kasus Batch</h4>
+                        <p className="text-slate-500 text-sm">Daftar kasus OSCE yang keluar di setiap periode UKMPPD.</p>
+                    </div>
+                </div>
+
+                {/* Card 2: Analisis 10 Tahun */}
+                <div className="group relative bg-slate-900 dark:bg-black p-6 rounded-[2rem] border border-slate-800 dark:border-white/10 hover:border-amber-500/30 transition-all cursor-pointer overflow-hidden shadow-md hover:shadow-2xl">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10">
+                        <div className="w-12 h-12 bg-white/10 text-amber-400 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md">
+                            <BarChart2 size={24} />
+                        </div>
+                        <h4 className="text-lg font-bold text-white mb-2">Analisis 2016-2025</h4>
+                        <p className="text-slate-400 text-sm">Data analitik tren penyakit tersering selama 10 tahun terakhir.</p>
+                    </div>
+                </div>
+
+                {/* Card 3: E-Book & Materi */}
+                <div className="group relative bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-white/5 hover:border-teal-500/30 transition-all cursor-pointer overflow-hidden shadow-sm hover:shadow-xl">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10">
+                        <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 text-teal-600 rounded-2xl flex items-center justify-center mb-4">
+                            <Library size={24} />
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Perpustakaan Digital</h4>
+                        <p className="text-slate-500 text-sm">Kumpulan E-Book, guideline, dan video pembelajaran OSCE.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
       </div>
     );
   }
 
   // ==========================================
-  // VIEW 2: MENU (Big Cards)
+  // VIEW 2: MODE SELECT (Checklist vs Case)
   // ==========================================
-  if (view === 'MENU') {
+  if (view === 'MODE_SELECT') {
     return (
       <div className="animate-in slide-in-from-right duration-500 px-4 pb-24 max-w-5xl mx-auto pt-6">
         
         <button onClick={() => setView('HOME')} className="mb-8 flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-white dark:bg-white/5 px-4 py-2 rounded-full w-fit border border-slate-200 dark:border-white/10">
-          <ArrowLeft size={16} /> Kembali ke Stase
+          <ArrowLeft size={16} /> Kembali ke Home
         </button>
 
         <div className="text-center mb-12">
@@ -256,23 +212,25 @@ export default function OSCEStation() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <div onClick={() => setView('CHECKLIST_MODE')} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-10 rounded-[2.5rem] cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-500/10 overflow-hidden">
+          {/* Card Checklist */}
+          <div onClick={() => setView('CHECKLIST_TOPIC_SELECT')} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-10 rounded-[2.5rem] cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-500/10 overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl group-hover:bg-teal-500/10 transition-all"></div>
             <div className="relative z-10">
               <div className="w-16 h-16 bg-teal-50 dark:bg-teal-900/20 text-teal-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm"><CheckCircle size={32} /></div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Latihan Ceklis</h3>
-              <p className="text-slate-500 text-sm mb-8 leading-relaxed">Simulasi ujian step-by-step dengan panduan script anamnesis.</p>
-              <span className="text-teal-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">Mulai Latihan <ChevronRight size={16} /></span>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Latihan Skill</h3>
+              <p className="text-slate-500 text-sm mb-8 leading-relaxed">Panduan langkah demi langkah untuk tindakan prosedural (Ceklis).</p>
+              <span className="text-teal-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">Pilih Tindakan <ChevronRight size={16} /></span>
             </div>
           </div>
 
+          {/* Card Bedah Kasus */}
           <div onClick={() => setView('CASE_LIBRARY')} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-10 rounded-[2.5rem] cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10 overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl group-hover:bg-orange-500/10 transition-all"></div>
             <div className="relative z-10">
               <div className="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm"><BookOpen size={32} /></div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Perpustakaan Kasus</h3>
-              <p className="text-slate-500 text-sm mb-8 leading-relaxed">Pelajari daftar penyakit, diagnosis banding, dan tatalaksana.</p>
-              <span className="text-orange-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">Buka Materi <ChevronRight size={16} /></span>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Bedah Kasus</h3>
+              <p className="text-slate-500 text-sm mb-8 leading-relaxed">Pelajari alur diagnosis dan tatalaksana penyakit tersering.</p>
+              <span className="text-orange-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all">Buka Perpustakaan <ChevronRight size={16} /></span>
             </div>
           </div>
         </div>
@@ -281,17 +239,67 @@ export default function OSCEStation() {
   }
 
   // ==========================================
-  // VIEW 3: CHECKLIST MODE
+  // VIEW 3: CHECKLIST TOPIC SELECT (NEW LAYER!)
   // ==========================================
-  if (view === 'CHECKLIST_MODE') {
+  if (view === 'CHECKLIST_TOPIC_SELECT') {
+    return (
+        <div className="animate-in slide-in-from-right duration-500 px-4 pb-24 max-w-4xl mx-auto pt-6">
+            <button onClick={() => setView('MODE_SELECT')} className="mb-8 flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-white dark:bg-white/5 px-4 py-2 rounded-full w-fit border border-slate-200 dark:border-white/10">
+                <ArrowLeft size={16} /> Kembali ke Mode
+            </button>
+
+            <div className="mb-10">
+                <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Pilih Tindakan</h1>
+                <p className="text-slate-500">Daftar keterampilan klinis untuk stase {currentStation.title}</p>
+            </div>
+
+            <div className="grid gap-4">
+                {currentStation.sections.length === 0 ? (
+                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-dashed border-slate-300">
+                        <p className="text-slate-400">Belum ada data checklist untuk stase ini.</p>
+                    </div>
+                ) : (
+                    currentStation.sections.map((section, idx) => (
+                        <div 
+                            key={idx}
+                            onClick={() => { setActiveSectionIdx(idx); setView('CHECKLIST_RUN'); }}
+                            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-6 rounded-[1.5rem] cursor-pointer hover:border-teal-500/50 hover:shadow-lg transition-all flex items-center justify-between"
+                        >
+                            <div className="flex items-center gap-6">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center font-bold text-slate-500 group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                                    {idx + 1}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{section.title}</h3>
+                                    <p className="text-xs text-slate-400">Klik untuk mulai latihan</p>
+                                </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-all">
+                                <ChevronRight size={20} />
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+  }
+
+  // ==========================================
+  // VIEW 4: CHECKLIST RUNNER (THE ACTUAL CHECKLIST)
+  // ==========================================
+  if (view === 'CHECKLIST_RUN' && activeSectionIdx !== null) {
+    const activeSectionData = currentStation.sections[activeSectionIdx];
     return (
       <div className="animate-in slide-in-from-right duration-500 h-full flex flex-col bg-slate-50 dark:bg-slate-950">
+        
+        {/* Floating Header */}
         <div className="px-4 pt-4 pb-2 sticky top-0 z-20">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-3 rounded-full flex justify-between items-center shadow-lg">
                 <div className="flex items-center gap-3 pl-2">
-                    <button onClick={() => setView('MENU')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><ArrowLeft size={20} /></button>
+                    <button onClick={() => setView('CHECKLIST_TOPIC_SELECT')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><ArrowLeft size={20} /></button>
                     <div>
-                        <h2 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">{currentStation.title}</h2>
+                        <h2 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">{activeSectionData.title}</h2>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Checklist Mode</p>
                     </div>
                 </div>
@@ -302,39 +310,12 @@ export default function OSCEStation() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar pb-32 max-w-4xl mx-auto w-full">
-           {currentStation.sections.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                 <Info size={40} className="mb-4 opacity-50"/>
-                 <p>Belum ada data ceklis.</p>
-             </div>
-           ) : (
-             <div className="space-y-8">
-                {currentStation.sections.map((section, idx) => {
-                  const isExpanded = expandedSections[idx] ?? true;
-                  return (
-                    <div key={idx} className="relative">
-                       {idx !== currentStation.sections.length - 1 && <div className="absolute left-[22px] top-12 bottom-[-40px] w-0.5 bg-slate-200 dark:bg-slate-800 -z-10"></div>}
-                       <div onClick={() => setExpandedSections(prev => ({...prev, [idx]: !isExpanded}))} className="flex items-center gap-6 cursor-pointer mb-6 group">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border-4 border-slate-50 dark:border-slate-950 z-10 transition-all shadow-sm ${isExpanded ? 'bg-teal-500 text-white shadow-teal-500/30 scale-110' : 'bg-white text-slate-400 dark:bg-slate-800'}`}>
-                              {idx + 1}
-                          </div>
-                          <div className="flex-1">
-                             <h3 className={`font-bold text-xl transition-colors ${isExpanded ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>{section.title}</h3>
-                             <p className="text-xs text-slate-400 font-medium">Klik untuk {isExpanded ? 'tutup' : 'buka'}</p>
-                          </div>
-                          <div className={`w-10 h-10 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm transition-transform ${isExpanded ? 'rotate-180 text-teal-500' : 'text-slate-300'}`}>
-                              <ChevronDown size={20} />
-                          </div>
-                       </div>
-                       {isExpanded && <div className="pl-[4.5rem] animate-in slide-in-from-top-4 duration-300">{renderSectionContent(section)}</div>}
-                    </div>
-                  );
-                })}
-             </div>
-           )}
+           <RenderChecklistItems section={activeSectionData} />
            
-           <div className="mt-16 text-center pl-16">
-            <button onClick={() => setView('MENU')} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all">Selesai Latihan</button>
+           <div className="mt-16 text-center">
+            <button onClick={() => setView('CHECKLIST_TOPIC_SELECT')} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all">
+              Selesai Latihan
+            </button>
            </div>
         </div>
       </div>
@@ -342,7 +323,7 @@ export default function OSCEStation() {
   }
 
   // ==========================================
-  // VIEW 4: CASE LIBRARY
+  // VIEW 5: CASE LIBRARY
   // ==========================================
   if (view === 'CASE_LIBRARY') {
     const cases = currentStation.cases || [];
@@ -352,15 +333,23 @@ export default function OSCEStation() {
       <div className="animate-in slide-in-from-right duration-500 h-full flex flex-col bg-slate-50 dark:bg-slate-950">
         <div className="px-4 pt-4 sticky top-0 z-20 pb-4 bg-slate-50 dark:bg-slate-950/90 backdrop-blur-md">
           <div className="max-w-4xl mx-auto">
-            <button onClick={() => setView('MENU')} className="mb-4 flex items-center gap-2 text-slate-500 hover:text-teal-600 text-xs font-bold uppercase tracking-wider transition-colors">
+            <button onClick={() => setView('MODE_SELECT')} className="mb-4 flex items-center gap-2 text-slate-500 hover:text-teal-600 text-xs font-bold uppercase tracking-wider transition-colors">
               <ArrowLeft size={16} /> Kembali
             </button>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-6">Kasus: {currentStation.title}</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-6">Perpustakaan Kasus</h1>
+            
+            {/* Search Bar iOS Style */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search size={20} className="text-slate-400 group-focus-within:text-teal-500 transition-colors" />
               </div>
-              <input type="text" placeholder="Cari penyakit atau gejala..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              <input 
+                  type="text" 
+                  placeholder="Cari penyakit atau gejala..." 
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+              />
             </div>
           </div>
         </div>
@@ -385,19 +374,20 @@ export default function OSCEStation() {
   }
 
   // ==========================================
-  // VIEW 5: CASE DETAIL (FINAL REVISI STRUCTURE)
+  // VIEW 6: CASE DETAIL (CLINICAL FLOW FIXED)
   // ==========================================
   if (view === 'CASE_DETAIL' && activeCase) {
     const hasNewFormat = activeCase.content.tatalaksana && activeCase.content.diagnosis;
     return (
       <div className="animate-in slide-in-from-bottom duration-500 h-full flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
         
-        {/* Header Sticky (Fix Header Issue) */}
+        {/* Header Sticky */}
         <div className="px-4 pt-4 sticky top-0 z-30 pb-2 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-white/5">
             <div className="max-w-4xl mx-auto flex justify-between items-center">
                 <div className="flex flex-col gap-1">
-                    <button onClick={() => setView('CASE_LIBRARY')} className="flex items-center gap-2 text-[10px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white uppercase tracking-widest transition-colors">
-                        <ArrowLeft size={12} /> Kembali
+                    {/* TOMBOL KEMBALI DI ATAS JUDUL (SESUAI REQUEST) */}
+                    <button onClick={() => setView('CASE_LIBRARY')} className="flex items-center gap-2 text-[10px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white uppercase tracking-widest transition-colors w-fit">
+                        <ArrowLeft size={12} /> Kembali ke Library
                     </button>
                     <h2 className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">{activeCase.title}</h2>
                 </div>
@@ -411,7 +401,7 @@ export default function OSCEStation() {
                         : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
-                    {isCompleted ? <><CheckCircle size={14}/> Selesai</> : <><BookmarkCheck size={14}/> Tandai Selesai</>}
+                    {isCompleted ? <><CheckCircle size={14}/> Selesai</> : <><BookmarkCheck size={14}/> Tandai</>}
                 </button>
             </div>
         </div>
@@ -431,7 +421,7 @@ export default function OSCEStation() {
 
             {hasNewFormat ? (
                 <>
-                    {/* 1. ETIOLOGI & FAKTOR RISIKO (Kondisional) */}
+                    {/* 1. ETIOLOGI & FAKTOR RISIKO */}
                     {(activeCase.content as any).etiologi && (
                         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-white/5">
                             <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-4">
@@ -472,7 +462,7 @@ export default function OSCEStation() {
                         </div>
                     </div>
 
-                    {/* 4. PEMERIKSAAN PENUNJANG (Kondisional) */}
+                    {/* 4. PEMERIKSAAN PENUNJANG */}
                     {(activeCase.content as any).pemeriksaan_penunjang && (
                         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-white/5">
                             <h3 className="text-sm font-black text-purple-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-4">
@@ -487,7 +477,7 @@ export default function OSCEStation() {
                         </div>
                     )}
 
-                    {/* 5. TATALAKSANA (Split Layout) */}
+                    {/* 5. TATALAKSANA */}
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-white/5">
                             <h3 className="text-sm font-black text-emerald-600 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -549,14 +539,14 @@ export default function OSCEStation() {
                     </div>
 
                     {/* 7. OSCE PRO TIP */}
-                    <div className="bg-gradient-to-br from-slate-900 to-black p-8 rounded-[2rem] border border-slate-800 relative overflow-hidden text-white shadow-2xl">
-                        <div className="absolute top-0 right-0 p-32 bg-orange-500/10 rounded-full blur-3xl"></div>
+                    <div className="bg-gradient-to-br from-slate-800 to-black p-8 rounded-[2rem] border border-slate-700 relative overflow-hidden text-white shadow-2xl">
+                        <div className="absolute top-0 right-0 p-32 bg-orange-500/20 rounded-full blur-3xl"></div>
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-4 text-orange-400">
                                 <Flame size={20} fill="currentColor" />
                                 <h4 className="font-black uppercase text-xs tracking-widest">OSCE Pro Tip</h4>
                             </div>
-                            <p className="text-lg font-medium italic leading-relaxed text-slate-300">
+                            <p className="text-lg font-medium italic leading-relaxed text-slate-200">
                                 "{activeCase.content.osce_tip}"
                             </p>
                         </div>
