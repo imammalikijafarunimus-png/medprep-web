@@ -2,54 +2,86 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Check, ArrowRight, Brain, Stethoscope, Heart, 
-  BookOpen, Star, Shield, PlayCircle
+  BookOpen, Star, Shield, PlayCircle, Moon, Sun, Users, Award, 
+  CheckCircle2, Sparkles, Zap, Quote, Instagram, MessageCircle,
+  PenTool, Smartphone
 } from 'lucide-react';
 
-// --- SUB-COMPONENTS (Styling yang lebih Premium) ---
+// --- DATA TESTIMONI ---
+const TESTIMONIALS = [
+  {
+    name: "dr. Aditya, S.Ked",
+    role: "Lulusan UKMPPD Batch 1 2025",
+    univ: "Univ. Indonesia",
+    quote: "Fitur Insight-nya benar-benar 'game changer'. Saat ujian OSCE stase psikiatri dan bioetika, saya jadi jauh lebih tenang dan percaya diri."
+  },
+  {
+    name: "Siti Rahma",
+    role: "Mahasiswa FK Tahap Profesi",
+    univ: "UM Yogyakarta",
+    quote: "Bank soalnya sangat relevan. Pembahasan tidak hanya medis, tapi ada 'touch' kemanusiaan yang sering dilupakan di buku teks biasa."
+  },
+  {
+    name: "Fajar Santoso",
+    role: "Co-Ass Stase Bedah",
+    univ: "Univ. Brawijaya",
+    quote: "Checklist OSCE-nya juara. Runtut, sistematis, dan timernya bikin simulasi berasa ujian beneran. Wajib punya buat pejuang One Shot."
+  }
+];
 
-// 1. Feature Card dengan Hover Gradient & Glass Feel
-const FeatureCard = ({ icon, title, subtitle, desc }: { icon: React.ReactNode, title: string, subtitle: string, desc: string }) => (
-  <div className="group relative p-8 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-    {/* Gradient Background on Hover */}
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    
-    <div className="relative z-10">
-      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-        {icon}
-      </div>
-      <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{title}</h3>
-      <p className="text-xs font-bold text-blue-600 mb-3 uppercase tracking-widest mt-1">{subtitle}</p>
-      <p className="text-slate-600 leading-relaxed text-sm">
-        {desc}
-      </p>
-    </div>
-  </div>
-);
+// --- DATA KONTRIBUTOR ---
+const TEAM_DIVISIONS = [
+  {
+    title: "CBT Center & Flashcard",
+    color: "text-indigo-500",
+    members: [
+      { name: "dr. Imam", title: "Top 10 IPK FK Unimus Batch Nov 2025", gender: "male" }
+    ]
+  },
+  {
+    title: "OSCE Checklist",
+    color: "text-teal-500",
+    members: [
+      { name: "dr. Krishna", title: "Nilai OSCE Tertinggi Batch Feb 2025", gender: "male" },
+      { name: "dr. Kharisma", title: "Nilai OSCE Tertinggi Batch Feb 2025", gender: "female" },
+      { name: "dr. Fath", title: "Tim Ahli Materi", gender: "male" },
+      { name: "dr. Azzaozi", title: "Tim Ahli Materi", gender: "male" },
+      { name: "dr. Andi", title: "Tim Ahli Materi", gender: "male" },
+    ]
+  },
+  {
+    title: "OSCE Cases",
+    color: "text-rose-500",
+    members: [
+      { name: "dr. Feby", title: "Top 1 IPK FK Unimus Batch Nov 2025", gender: "female" },
+      { name: "dr. Indria", title: "Nilai Tertinggi CBT UKMPPD Nov 2025", gender: "female" },
+      { name: "dr. Vina", title: "Nilai Tertinggi CBT UKMPPD Nov 2025", gender: "female" },
+      { name: "dr. Imam", title: "Koordinator", gender: "male" },
+      { name: "dr. Intan", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Putri", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Alya", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Adela", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Jihan", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Wajihahni", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Ulya", title: "Tim Penyusun", gender: "female" },
+    ]
+  },
+  {
+    title: "OSCIE & Bioetika",
+    color: "text-emerald-500",
+    members: [
+      { name: "dr. Imam", title: "Koordinator OSCIE", gender: "male" },
+      { name: "dr. Kharisma", title: "Konsultan Fiqih Medis", gender: "female" },
+    ]
+  }
+];
 
-// 2. Testimonial Card dengan Style Minimalis
-const TestimonialCard = ({ quote, name, role }: { quote: string, name: string, role: string }) => (
-  <div className="bg-white/60 backdrop-blur-sm p-8 rounded-2xl border border-white shadow-xl relative">
-    <div className="flex items-center gap-4 mb-4">
-      <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center font-bold text-blue-600 text-lg">
-        {name.charAt(0)}
-      </div>
-      <div>
-        <h4 className="font-bold text-slate-900 text-sm">{name}</h4>
-        <p className="text-xs text-slate-500 font-medium">{role}</p>
-      </div>
-    </div>
-    <p className="text-slate-700 italic relative z-10 text-lg font-medium leading-relaxed">"{quote}"</p>
-  </div>
-);
-
-// --- MAIN COMPONENT ---
 export default function LandingPage() {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  // State Toggle
-  const [demoMode, setDemoMode] = useState<'standard' | 'insight'>('standard');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [demoMode, setDemoMode] = useState<'medis' | 'insight'>('medis');
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -57,377 +89,389 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
+  const getAvatar = (gender: string, seed: string) => 
+    `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&gender=${gender}&clothing=blazerAndShirt`;
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] font-sans text-slate-900 dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-teal-500 selection:text-white">
       
-      {/* ================= BACKGROUND MESH GRADIENTS (Orbs) ================= */}
+      {/* BACKGROUND AMBIENCE */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Bola Ungu Pudar di Kiri Atas */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob"></div>
-        {/* Bola Biru Pudar di Kanan Atas */}
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-2000"></div>
-        {/* Bola Pink Pudar di Tengah Bawah */}
-        <div className="absolute -bottom-32 left-20 w-[600px] h-[600px] bg-pink-100 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-400/20 dark:bg-indigo-500/10 rounded-full blur-[120px] animate-pulse delay-1000"></div>
       </div>
 
-      {/* ================= NAVBAR (GLASSMORPHISM) ================= */}
-      <nav className={`fixed w-full z-50 transition-all duration-500 ${
-        isScrolled 
-          ? 'bg-white/70 backdrop-blur-lg border-b border-white/20 shadow-sm py-4' 
-          : 'bg-transparent py-6'
-      }`}>
+      {/* NAVBAR */}
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 py-4 shadow-sm' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 font-extrabold text-2xl tracking-tighter text-slate-900 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">M</div>
-            MedPrep
+          <div className="flex items-center gap-2.5 font-black text-2xl tracking-tighter cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-500/20">M</div>
+            <span className="text-slate-900 dark:text-white">MedPrep</span>
           </div>
 
-          {/* Menu Desktop */}
-          <div className="hidden md:flex items-center gap-10 font-medium text-slate-600 text-sm">
-            {['Home', 'Fitur', 'Kurikulum', 'Harga'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-blue-600 transition-colors relative group">
-                {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
-              </a>
+          <div className="hidden md:flex items-center gap-8 font-bold text-sm text-slate-500 dark:text-slate-400">
+            {['Fitur', 'OSCIE', 'Testimoni', 'Harga', 'Kontributor'].map((item) => (
+              <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-teal-600 dark:hover:text-white transition-colors">{item}</a>
             ))}
           </div>
 
-          {/* Tombol Auth */}
           <div className="hidden md:flex items-center gap-3">
-            <button onClick={() => navigate('/login')} className="px-6 py-2.5 text-slate-600 font-bold text-sm hover:text-blue-600 transition-colors">
-              Masuk
+            <button onClick={toggleTheme} className="p-2.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white hover:scale-110 transition-transform active:scale-95 border border-transparent dark:border-white/5">
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <button 
-              onClick={() => navigate('/register')}
-              className="px-6 py-2.5 rounded-full bg-slate-900 text-white font-bold text-sm hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
-            >
-              Daftar Gratis
-            </button>
+            <button onClick={() => navigate('/login')} className="px-5 py-2.5 font-bold text-sm text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-white transition-colors">Masuk</button>
+            <button onClick={() => navigate('/register')} className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:scale-105 transition-transform shadow-xl shadow-teal-500/10">Daftar Gratis</button>
           </div>
 
-          {/* Mobile Toggle */}
-          <button className="md:hidden p-2 text-slate-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-4 md:hidden">
+              <button onClick={toggleTheme} className="p-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white">{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button>
+              <button className="text-slate-900 dark:text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X /> : <Menu />}</button>
+          </div>
         </div>
         
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl border-b border-slate-100 p-6 flex flex-col gap-4 shadow-xl animate-in slide-in-from-top-5">
-            <button onClick={() => navigate('/register')} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30">Daftar Sekarang</button>
+          <div className="md:hidden absolute top-full left-0 w-full bg-white/95 dark:bg-black/95 backdrop-blur-xl border-b border-slate-100 dark:border-white/10 p-6 flex flex-col gap-4 shadow-xl">
+            {['Fitur', 'OSCIE', 'Testimoni', 'Harga', 'Kontributor'].map((item) => (<a key={item} href={`#${item.toLowerCase()}`} onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-bold text-slate-600 dark:text-slate-300 py-2">{item}</a>))}
+            <hr className="border-slate-100 dark:border-white/10"/>
+            <button onClick={() => navigate('/login')} className="w-full py-3 font-bold text-slate-600 dark:text-slate-300">Masuk</button>
+            <button onClick={() => navigate('/register')} className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold">Daftar Sekarang</button>
           </div>
         )}
       </nav>
 
-      {/* ================= HERO SECTION ================= */}
-      <section id="home" className="relative pt-44 pb-20 px-6 overflow-hidden z-10">
+      {/* HERO SECTION */}
+      <section id="home" className="relative pt-32 pb-20 px-6 z-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           
-          {/* Text Content */}
-          <div className="space-y-8 animate-in slide-in-from-left duration-1000">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-blue-100 shadow-sm text-blue-700 text-xs font-bold uppercase tracking-wider">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
-              #1 Platform UKMPPD Terintegrasi
+          <div className="animate-in fade-in slide-in-from-left duration-1000 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-900/30 border border-teal-100 dark:border-teal-800 text-teal-700 dark:text-teal-300 text-[10px] font-bold uppercase tracking-wider mb-6">
+              <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span>
+              Medical OS v1.0
             </div>
             
-            <h1 className="text-5xl lg:text-7xl font-extrabold leading-[1.1] text-slate-900 tracking-tight">
-              Lulus UKMPPD <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">One Shot.</span>
+            <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] mb-6 text-slate-900 dark:text-white">
+              Lulus UKMPPD <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-teal-400">One Shot.</span>
             </h1>
             
-            <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
-              Platform belajar kedokteran masa depan. Bank soal klinis terupdate, panduan OSCE visual, dan wawasan <span className="text-slate-900 font-bold decoration-wavy underline decoration-emerald-400">Bioetika Medis</span>.
+            <p className="text-lg text-slate-500 dark:text-slate-400 max-w-lg mb-8 leading-relaxed font-medium mx-auto lg:mx-0">
+              Platform belajar kedokteran #1 yang mengintegrasikan Bank Soal Klinis, Checklist OSCE, dan <span className="text-teal-600 dark:text-teal-400 font-bold underline decoration-wavy">Wawasan Bioetika Islam</span> dalam satu aplikasi.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <button onClick={() => navigate('/register')} className="group flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
-                Mulai Belajar
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <button onClick={() => navigate('/register')} className="w-full sm:w-auto px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                Mulai Belajar <ArrowRight size={20} />
               </button>
-              <button className="flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-2xl font-bold text-lg transition-all">
-                <PlayCircle size={20} /> Demo Video
+              <button className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white rounded-2xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+                <PlayCircle size={20} /> Lihat Demo
               </button>
-            </div>
-            
-            <div className="flex items-center gap-6 pt-4 text-sm font-semibold text-slate-500">
-              <div className="flex -space-x-2">
-                {[1,2,3,4].map(i => <div key={i} className={`w-8 h-8 rounded-full border-2 border-white bg-slate-200 bg-[url('https://i.pravatar.cc/100?img=${10+i}')] bg-cover`}></div>)}
-              </div>
-              <p>Dipercaya 2.000+ Mahasiswa FK</p>
             </div>
           </div>
 
-          {/* Visual Hero: Glass Laptop Mockup */}
-          <div className="relative animate-in slide-in-from-right duration-1000 delay-200">
-            <div className="relative mx-auto bg-slate-900 rounded-2xl border-[6px] border-slate-800 w-full max-w-[550px] shadow-2xl overflow-hidden group">
-              
-              {/* Top Bar */}
-              <div className="bg-slate-800 h-6 flex items-center gap-1.5 px-4">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-              </div>
-
-              {/* Screen Area */}
-              <div className="bg-white aspect-[16/10] p-8 relative overflow-hidden">
-                {/* Abstract Content Placeholder */}
-                <div className="space-y-4 opacity-30">
-                  <div className="h-6 bg-slate-900 rounded-md w-1/3 mb-8"></div>
-                  <div className="h-3 bg-slate-400 rounded w-full"></div>
-                  <div className="h-3 bg-slate-400 rounded w-5/6"></div>
-                  <div className="h-3 bg-slate-400 rounded w-4/6"></div>
-                  <div className="grid grid-cols-2 gap-4 mt-8">
-                    <div className="h-24 bg-blue-100 rounded-lg"></div>
-                    <div className="h-24 bg-slate-100 rounded-lg"></div>
-                  </div>
+          <div className="relative animate-in fade-in slide-in-from-right duration-1000 delay-200 lg:block">
+             <div className="relative mx-auto bg-white dark:bg-[#111] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden max-w-lg w-full ring-1 ring-slate-900/5">
+                <div className="h-8 bg-slate-100 dark:bg-[#1a1a1a] border-b border-slate-200 dark:border-white/5 flex items-center px-4 gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
                 </div>
-
-                {/* THE FLOATING INSIGHT CARD (Glassmorphism Effect) */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] bg-white/60 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-2xl z-10 animate-float">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
-                      <BookOpen size={20} />
+                <div className="p-8 bg-slate-50 dark:bg-[#0a0a0a] min-h-[300px] flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full p-6 opacity-30 blur-[2px] pointer-events-none select-none">
+                        <div className="w-1/3 h-8 bg-slate-300 dark:bg-slate-700 rounded-lg mb-6"></div>
+                        <div className="space-y-3">
+                            <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                            <div className="w-5/6 h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                            <div className="w-4/6 h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">Insight Mode Detected</h4>
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Fiqih Medis</p>
+                    <div className="relative z-10 w-full max-w-sm bg-white/80 dark:bg-[#1a1a1a]/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/20 dark:border-white/10 ring-1 ring-black/5 animate-float">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                                <BookOpen size={20} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">Insight Mode Detected</h4>
+                                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Fiqih Medis</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed mb-4">
+                            "Pada kondisi gawat darurat (life-saving), tindakan medis prioritas mendahului izin keluarga (Informed Consent bisa menyusul)."
+                        </p>
+                        <div className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg border border-slate-100 dark:border-white/5">
+                            <p className="text-[10px] text-slate-400 font-mono">Ref: Kaidah Fiqih "Adh-dharuraat tubiihul mahzhuraat"</p>
+                        </div>
                     </div>
-                  </div>
-                  <p className="text-slate-700 text-xs font-medium leading-relaxed">
-                    "Pada kondisi gawat darurat (life-saving), tindakan medis prioritas mendahului izin keluarga (Informed Consent bisa menyusul)."
-                  </p>
-                  <div className="mt-3 text-[10px] text-slate-400 font-mono bg-white/50 p-2 rounded">
-                    Ref: Kaidah Fiqih "Adh-dharuraat tubiihul mahzhuraat"
-                  </div>
                 </div>
-
-              </div>
-            </div>
-            
-            {/* Dekorasi di belakang laptop */}
-            <div className="absolute -z-10 -bottom-10 -right-10 w-40 h-40 bg-blue-500/20 rounded-full blur-2xl"></div>
-            <div className="absolute -z-10 -top-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl"></div>
+             </div>
           </div>
 
         </div>
       </section>
 
-      {/* ================= WHY MEDPREP (Clean Cards) ================= */}
-      <section id="features" className="py-24 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight text-slate-900">Kenapa Harus MedPrep?</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto text-lg">Kombinasi sempurna antara kecerdasan klinis dan kepekaan nurani.</p>
-          </div>
+      {/* FEATURES GRID */}
+      <section id="fitur" className="py-24 px-6 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-white/5">
+        <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-black mb-4 text-slate-900 dark:text-white">Kenapa Harus MedPrep?</h2>
+                <p className="text-lg text-slate-500 dark:text-slate-400">Kombinasi sempurna antara kecerdasan klinis dan kepekaan nurani.</p>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard 
-              icon={<Brain size={32} />}
-              title="Tajam Klinis"
-              subtitle="The Brain"
-              desc="Soal vignette CBT sesuai blueprint terbaru. Latih clinical reasoning dengan pembahasan mendalam, bukan sekadar kunci jawaban."
-            />
-            <FeatureCard 
-              icon={<Stethoscope size={32} />}
-              title="Terampil Praktis"
-              subtitle="The Skill"
-              desc="Checklist OSCE interaktif. Panduan langkah demi langkah dari Anamnesis hingga Edukasi, lengkap dengan timer ujian."
-            />
-            <FeatureCard 
-              icon={<Heart size={32} />}
-              title="Beradab & Etis"
-              subtitle="The Soul"
-              desc="Integrasi modul Bioetika & Fiqih Medis. Membentuk dokter yang tidak hanya pintar mengobati, tapi juga menenangkan hati."
-            />
-          </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="p-8 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/5 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6"><Brain size={28} /></div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tajam Klinis</h3>
+                    <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-3">The Brain</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Soal vignette CBT sesuai blueprint terbaru. Latih clinical reasoning dengan pembahasan mendalam.</p>
+                </div>
+                <div className="p-8 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/5 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center mb-6"><Stethoscope size={28} /></div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Terampil Praktis</h3>
+                    <p className="text-xs font-bold text-teal-500 uppercase tracking-widest mb-3">The Skill</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Checklist OSCE interaktif. Panduan langkah demi langkah dari Anamnesis hingga Edukasi.</p>
+                </div>
+                <div className="p-8 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/5 hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div className="w-14 h-14 bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mb-6"><Heart size={28} /></div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Beradab & Etis</h3>
+                    <p className="text-xs font-bold text-rose-500 uppercase tracking-widest mb-3">The Soul</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Integrasi modul Bioetika & Fiqih Medis. Membentuk dokter yang menenangkan hati pasien.</p>
+                </div>
+                <div className="p-8 bg-emerald-900 text-white rounded-[2rem] shadow-xl relative overflow-hidden group border border-emerald-700">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/20 rounded-full blur-2xl group-hover:bg-teal-400/30 transition-all"></div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 bg-white/10 text-emerald-300 rounded-2xl flex items-center justify-center backdrop-blur-sm"><Moon size={28} fill="currentColor" /></div>
+                            <span className="bg-white/20 text-[10px] font-bold px-2 py-1 rounded text-white border border-white/10 uppercase tracking-wide">Coming Soon</span>
+                        </div>
+                        <h3 className="text-lg font-black mb-2">OSCIE Center</h3>
+                        <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-3">Islamic Integration</p>
+                        <p className="text-sm text-emerald-100 leading-relaxed">Panduan Ceklis OSCIE, Doa Medis, dan Fiqih sesuai Himpunan Putusan Tarjih.</p>
+                    </div>
+                </div>
+            </div>
         </div>
       </section>
 
-      {/* ================= TOGGLE SECTION (Gradient Container) ================= */}
-      <section className="py-24 relative overflow-hidden">
-        {/* Latar Belakang Gradient Halus */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white"></div>
-        
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Satu Aplikasi, Dua Dunia.</h2>
-            <p className="text-slate-600 text-lg">
-              Geser toggle untuk melihat bagaimana MedPrep mengubah cara Anda belajar.
-            </p>
-          </div>
-
-          {/* TOGGLE SWITCH */}
-          <div className="flex justify-center items-center gap-6 mb-12 select-none">
-            <span className={`font-bold text-lg transition-colors ${demoMode === 'standard' ? 'text-blue-600' : 'text-slate-300'}`}>Mode Medis</span>
-            <div 
-              onClick={() => setDemoMode(prev => prev === 'standard' ? 'insight' : 'standard')}
-              className="w-24 h-12 bg-slate-200 rounded-full p-1 cursor-pointer relative shadow-inner transition-colors duration-500"
-              style={{ backgroundColor: demoMode === 'insight' ? '#d1fae5' : '#e2e8f0' }}
-            >
-              <div className={`w-10 h-10 rounded-full shadow-md transform transition-all duration-500 flex items-center justify-center text-white ${
-                demoMode === 'insight' ? 'translate-x-12 bg-emerald-500' : 'translate-x-0 bg-blue-500'
-              }`}>
-                {demoMode === 'insight' ? <BookOpen size={18} /> : <Brain size={18} />}
-              </div>
+      {/* DEMO INTERACTIVE */}
+      <section className="py-24 px-6 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto relative z-10">
+            <div className="text-center mb-10">
+                <h2 className="text-3xl md:text-4xl font-black mb-4 text-slate-900 dark:text-white">Satu Aplikasi, Dua Dunia.</h2>
+                <p className="text-lg text-slate-500 dark:text-slate-400">Geser toggle untuk melihat bagaimana MedPrep mengubah cara Anda belajar.</p>
             </div>
-            <span className={`font-bold text-lg transition-colors ${demoMode === 'insight' ? 'text-emerald-600' : 'text-slate-300'}`}>Mode Insight</span>
-          </div>
 
-          {/* INTERACTIVE DEMO CONTAINER */}
-          <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-700">
-            <div className="grid md:grid-cols-5 min-h-[400px]">
-              
-              {/* KONTEN MEDIS (KIRI) */}
-              <div className="md:col-span-3 p-10 flex flex-col justify-center border-r border-slate-50">
-                <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold w-fit mb-4">Gastroenterohepatology</div>
-                <h3 className="text-3xl font-bold text-slate-800 mb-4">Sirosis Hepatis</h3>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                  Kondisi fibrosis hati lanjut yang ditandai dengan distorsi arsitektur hepar dan pembentukan nodul regeneratif. Gejala klinis meliputi asites, ikterus, dan eritema palmaris.
-                </p>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <h4 className="font-bold text-slate-700 text-sm mb-2">Tatalaksana Utama:</h4>
-                  <ul className="list-disc pl-4 text-sm text-slate-600 space-y-1">
-                    <li>Atasi etiologi (Antiviral untuk Hep B/C).</li>
-                    <li>Restriksi garam untuk asites.</li>
-                    <li>Skrining karsinoma hepatoseluler.</li>
-                  </ul>
+            <div className="flex justify-center items-center gap-6 mb-12 select-none">
+                <span className={`font-bold text-lg transition-colors cursor-pointer ${demoMode === 'medis' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} onClick={() => setDemoMode('medis')}>Mode Medis</span>
+                <div onClick={() => setDemoMode(prev => prev === 'medis' ? 'insight' : 'medis')} className={`w-20 h-10 rounded-full p-1 cursor-pointer transition-colors duration-500 shadow-inner ${demoMode === 'insight' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                    <div className={`w-8 h-8 rounded-full shadow-md transform transition-all duration-500 flex items-center justify-center text-white ${demoMode === 'insight' ? 'translate-x-10 bg-emerald-500' : 'translate-x-0 bg-blue-500'}`}>
+                        {demoMode === 'insight' ? <Sparkles size={16} /> : <Brain size={16} />}
+                    </div>
                 </div>
-              </div>
+                <span className={`font-bold text-lg transition-colors cursor-pointer ${demoMode === 'insight' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} onClick={() => setDemoMode('insight')}>Mode Insight</span>
+            </div>
 
-              {/* KONTEN INSIGHT (KANAN - DINAMIS) */}
-              <div className={`md:col-span-2 p-10 flex flex-col justify-center transition-colors duration-500 ${
-                demoMode === 'insight' ? 'bg-emerald-50/50' : 'bg-slate-50/50'
-              }`}>
-                {demoMode === 'insight' ? (
-                  <div className="animate-in slide-in-from-right fade-in duration-500">
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100 mb-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600"><BookOpen size={20} /></div>
-                        <h4 className="font-bold text-emerald-800">Perspektif Islam</h4>
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+                <div className="grid md:grid-cols-2">
+                    <div className="p-10 border-b md:border-b-0 md:border-r border-slate-100 dark:border-white/5">
+                        <div className="inline-block bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider mb-4">Gastroenterohepatology</div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">Sirosis Hepatis</h3>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">Kondisi fibrosis hati lanjut yang ditandai dengan distorsi arsitektur hepar dan pembentukan nodul regeneratif. Gejala klinis meliputi asites, ikterus, dan eritema palmaris.</p>
+                        <div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl">
+                            <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-3">Tatalaksana Utama:</h4>
+                            <ul className="space-y-2">
+                                <li className="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Atasi etiologi (Antiviral Hep B/C).</li>
+                                <li className="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Restriksi garam untuk asites.</li>
+                                <li className="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Skrining karsinoma hepatoseluler.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className={`p-10 flex flex-col justify-center transition-colors duration-500 ${demoMode === 'insight' ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
+                        {demoMode === 'insight' ? (
+                            <div className="animate-in fade-in slide-in-from-right duration-500 space-y-4">
+                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-emerald-100 dark:border-emerald-900/30">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg text-emerald-600 dark:text-emerald-400"><BookOpen size={20} /></div>
+                                        <h4 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm">Perspektif Islam</h4>
+                                    </div>
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Jika Sirosis disebabkan oleh alkohol, hukum berobat tetap <strong>Wajib</strong> (ikhtiar), namun tobat nasuha diperlukan untuk pembersihan jiwa.</p>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-emerald-100 dark:border-emerald-900/30">
+                                    <h4 className="font-bold text-emerald-800 dark:text-emerald-300 text-xs uppercase tracking-widest mb-2">Doa Kesembuhan</h4>
+                                    <p className="text-sm font-serif italic text-slate-600 dark:text-slate-300">"Allahumma Rabban-nasi, adzhibil-ba'sa isyfi antasy-syafi..."</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center opacity-40">
+                                <Brain size={48} className="mx-auto mb-4 text-slate-400" />
+                                <p className="text-sm font-bold">Mode Medis Aktif</p>
+                                <p className="text-xs">Aktifkan toggle untuk melihat wawasan integratif.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section id="testimoni" className="py-24 px-6 bg-slate-50 dark:bg-black">
+          <div className="max-w-6xl mx-auto">
+              <h2 className="text-3xl font-black text-center mb-16 text-slate-900 dark:text-white">Kata Mereka</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                  {TESTIMONIALS.map((testi, i) => (
+                      <div key={i} className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 relative hover:-translate-y-2 transition-transform duration-300">
+                          <Quote size={32} className="text-indigo-200 dark:text-indigo-900/50 absolute top-8 left-8" />
+                          <div className="relative z-10 pt-6">
+                              <p className="text-slate-600 dark:text-slate-300 text-sm leading-loose mb-8 font-medium italic">"{testi.quote}"</p>
+                              <div className="flex items-center gap-4 border-t border-slate-100 dark:border-white/10 pt-6">
+                                  <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-400 to-purple-500 shadow-md`}></div>
+                                  <div>
+                                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{testi.name}</h4>
+                                      <p className="text-xs text-slate-500 dark:text-slate-400">{testi.role}</p>
+                                      <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mt-1">{testi.univ}</p>
+                                  </div>
+                              </div>
+                          </div>
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        Jika Sirosis disebabkan oleh alkohol, hukum berobat tetap <strong>Wajib</strong>, namun tobat nasuha diperlukan.
-                      </p>
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100">
-                      <h4 className="font-bold text-emerald-800 mb-2 text-sm">Doa Kesembuhan</h4>
-                      <p className="text-xs text-slate-500 italic">"Allahumma Rabban-nasi, adzhibil-ba'sa..."</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center opacity-40">
-                    <BookOpen size={48} className="mx-auto mb-4 text-slate-400" />
-                    <p className="text-sm font-medium">Mode Medis Aktif</p>
-                    <p className="text-xs">Aktifkan toggle untuk melihat wawasan integratif.</p>
-                  </div>
-                )}
+                  ))}
               </div>
-
-            </div>
           </div>
-
-          <div className="mt-12 max-w-3xl mx-auto">
-             <TestimonialCard 
-              quote="Jujur, fitur Insight ini game changer. Pas ujian OSCE station komunikasi, gue jadi lebih pede ngomong sama pasien karena paham aspek etis & agamanya."
-              name="Dr. Muda Aditya"
-              role="Universitas Indonesia"
-            />
-          </div>
-        </div>
       </section>
 
-      {/* ================= PRICING ================= */}
-      <section id="pricing" className="py-24 bg-white z-10 relative">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-extrabold mb-12">Investasi Cerdas.</h2>
-          
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            
-            {/* Free Tier */}
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 hover:border-blue-200 transition-colors">
-              <h3 className="font-bold text-slate-500 text-lg mb-2">Starter</h3>
-              <div className="text-4xl font-extrabold mb-1 text-slate-900">Rp 0</div>
-              <p className="text-slate-400 text-sm mb-8">Selamanya.</p>
-              
-              <ul className="space-y-4 text-left text-sm text-slate-600 mb-8 px-4">
-                <li className="flex gap-3"><Check size={18} className="text-blue-500" /> 100 Soal Latihan</li>
-                <li className="flex gap-3"><Check size={18} className="text-blue-500" /> Akses Dasar OSCE</li>
-                <li className="flex gap-3 text-slate-400"><X size={18} /> <span className="line-through">Modul Bioetika</span></li>
-              </ul>
-              
-              <button onClick={() => navigate('/register')} className="w-full py-3.5 rounded-xl border-2 border-slate-100 text-slate-700 font-bold hover:border-slate-300 transition-all">
-                Daftar Gratis
-              </button>
-            </div>
-
-            {/* Premium Tier */}
-            <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-2xl shadow-blue-900/20 transform scale-105 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-gradient-to-bl from-blue-500 to-purple-500 text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-xl uppercase tracking-wider">
-                Best Value
+      {/* PRICING */}
+      <section id="harga" className="py-24 px-6">
+          <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-16">
+                  <h2 className="text-4xl font-black mb-4 text-slate-900 dark:text-white">Investasi Cerdas.</h2>
+                  <p className="text-slate-500 dark:text-slate-400">Paket fleksibel untuk setiap tahap belajar.</p>
               </div>
-              
-              <h3 className="font-bold text-blue-200 text-lg mb-2">Pro Doctor</h3>
-              <div className="text-4xl font-extrabold mb-1">Rp 149rb</div>
-              <p className="text-slate-400 text-sm mb-8">per bulan</p>
-              
-              <ul className="space-y-4 text-left text-sm text-slate-300 mb-8 px-4">
-                <li className="flex gap-3"><Check size={18} className="text-emerald-400" /> <strong>Unlimited</strong> Bank Soal</li>
-                <li className="flex gap-3"><Check size={18} className="text-emerald-400" /> Full Video OSCE</li>
-                <li className="flex gap-3"><Check size={18} className="text-emerald-400" /> <strong>Akses Modul Insight</strong></li>
-                <li className="flex gap-3"><Check size={18} className="text-emerald-400" /> Statistik Analisis</li>
-              </ul>
-              
-              <button onClick={() => navigate('/register')} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold transition-all shadow-lg shadow-blue-500/30">
-                Langganan Sekarang
-              </button>
-            </div>
-
+              <div className="grid md:grid-cols-3 gap-8 items-end">
+                  {/* STARTER */}
+                  <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10">
+                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Starter</span>
+                      <h3 className="text-4xl font-black mt-4 mb-2 text-slate-900 dark:text-white">Rp 0</h3>
+                      <p className="text-xs text-slate-500 mb-8">Akses terbatas selamanya.</p>
+                      <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
+                          <li className="flex gap-3"><CheckCircle2 size={16} className="text-teal-500"/> 50 Soal Latihan</li>
+                          <li className="flex gap-3"><CheckCircle2 size={16} className="text-teal-500"/> Ceklis OSCE Dasar</li>
+                          <li className="flex gap-3 text-slate-400 line-through"><CheckCircle2 size={16} /> Modul OSCIE</li>
+                      </ul>
+                      <button onClick={() => navigate('/register')} className="w-full py-3 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Daftar Gratis</button>
+                  </div>
+                  {/* BASIC */}
+                  <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-indigo-500 shadow-2xl relative transform md:-translate-y-4">
+                      <div className="absolute -top-4 inset-x-0 flex justify-center"><span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">Rekomendasi PTN</span></div>
+                      <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Basic</span>
+                      <h3 className="text-4xl font-black mt-4 mb-2 text-slate-900 dark:text-white">45rb</h3>
+                      <p className="text-xs text-slate-500 mb-8">per 6 bulan.</p>
+                      <ul className="space-y-4 mb-8 text-sm font-bold text-slate-700 dark:text-white">
+                          <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500"/> Full Bank Soal</li>
+                          <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500"/> Full Ceklis OSCE</li>
+                          <li className="flex gap-3 text-slate-400 line-through font-normal"><CheckCircle2 size={16} /> Insight Islami</li>
+                      </ul>
+                      <button onClick={() => navigate('/register')} className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg hover:shadow-indigo-500/30 transition-all">Pilih Basic</button>
+                  </div>
+                  {/* EXPERT (FIXED) */}
+                  <div className="relative transform md:-translate-y-4">
+                      <div className="absolute -top-4 inset-x-0 flex justify-center z-20">
+                          <span className="bg-emerald-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">Rekomendasi PTM</span>
+                      </div>
+                      <div className="p-8 bg-slate-900 dark:bg-black rounded-[2.5rem] border border-slate-800 dark:border-white/20 shadow-2xl text-white relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl"></div>
+                          <div className="relative z-10 mt-2">
+                              <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">Expert</span>
+                              <h3 className="text-4xl font-black mt-4 mb-2">75rb</h3>
+                              <p className="text-xs text-slate-400 mb-8">per 6 bulan.</p>
+                              <ul className="space-y-4 mb-8 text-sm text-slate-300">
+                                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400"/> Semua Fitur Basic</li>
+                                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400"/> <strong className="text-white">Akses OSCIE Center</strong></li>
+                                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400"/> Fiqih Medis & Doa</li>
+                              </ul>
+                              <button onClick={() => navigate('/register')} className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2">
+                                  <Award size={16} /> Upgrade Expert
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
           </div>
-        </div>
       </section>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-8 text-center">
-        <div className="flex items-center justify-center gap-2 font-extrabold text-2xl text-slate-900 mb-6">
-          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white text-sm">M</div>
-          MedPrep
-        </div>
-        <div className="flex justify-center gap-6 mb-8 text-sm text-slate-500 font-medium">
-          <a href="#" className="hover:text-blue-600">Tentang Kami</a>
-          <a href="#" className="hover:text-blue-600">Kebijakan Privasi</a>
-          <a href="#" className="hover:text-blue-600">Bantuan</a>
-        </div>
-        <p className="text-xs text-slate-400">
-          © 2026 MedPrep Indonesia. Dibuat dengan 💙 dan ☕ untuk sejawat.
-        </p>
+      {/* CONTRIBUTORS */}
+      <section id="kontributor" className="py-24 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-white/5">
+          <div className="max-w-7xl mx-auto px-6">
+              <div className="text-center mb-16">
+                  <div className="inline-flex items-center gap-2 mb-4 text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-white/5 px-4 py-1.5 rounded-full text-xs uppercase tracking-widest">
+                      <Users size={14} /> Dibalik Layar
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white">Tim Penyusun</h2>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {TEAM_DIVISIONS.map((division, idx) => (
+                      <div key={idx} className="space-y-6">
+                          <h3 className={`text-sm font-black uppercase tracking-widest border-b border-slate-200 dark:border-white/10 pb-3 ${division.color}`}>
+                              {division.title}
+                          </h3>
+                          <div className="space-y-4">
+                              {division.members.map((member, mIdx) => (
+                                  <div key={mIdx} className="flex items-start gap-4 group">
+                                      <img 
+                                        src={getAvatar(member.gender, member.name + mIdx)} 
+                                        alt={member.name} 
+                                        className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0"
+                                      />
+                                      <div>
+                                          <h4 className="font-bold text-slate-900 dark:text-white text-sm">{member.name}</h4>
+                                          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{member.title}</p>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      </section>
+
+      {/* PESAN PENULIS */}
+      <section className="py-20 px-6 bg-slate-50 dark:bg-black relative">
+          <div className="max-w-2xl mx-auto text-center">
+              <Quote size={24} className="mx-auto mb-6 text-slate-300 dark:text-slate-700" />
+              <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-loose">
+                  "Buku ini lahir dari semangat belajar dan berbagi, sebagai panduan bagi rekan-rekan sejawat yang sedang menapaki perjalanan menjadi dokter sejati. Setiap lembar ditulis dengan harapan agar ilmu, keterampilan, dan nilai kemanusiaan dapat berjalan beriringan dalam setiap ujian—baik di meja OSCE maupun di medan pelayanan nyata. Semoga karya sederhana ini menjadi bagian kecil dari perjuangan besar kita dalam mengabdi kepada kesehatan bangsa."
+              </p>
+              <div className="mt-8 flex items-center justify-center gap-3 opacity-50">
+                  <div className="h-px w-8 bg-slate-400"></div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest">Pesan Penulis</p>
+                  <div className="h-px w-8 bg-slate-400"></div>
+              </div>
+          </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-white dark:bg-slate-900 py-12 border-t border-slate-100 dark:border-white/5">
+          <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-black text-xs">M</div>
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">MedPrep Indonesia</span>
+              </div>
+              <div className="flex gap-6">
+                  <a href="#" className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={18} /></a>
+                  <a href="#" className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 hover:text-green-500 transition-colors"><MessageCircle size={18} /></a>
+              </div>
+          </div>
+          <div className="text-center mt-12 pt-8 border-t border-slate-100 dark:border-white/5 mx-6">
+              <p className="text-[10px] text-slate-400">© 2026 MedPrep Indonesia. Dibuat dengan 💙 dan ☕ untuk sejawat.</p>
+          </div>
       </footer>
-
-      {/* CSS untuk Animasi Blob & Float */}
-      <style>{`
-        @keyframes float {
-          0% { transform: translate(-50%, -50%) translateY(0px); }
-          50% { transform: translate(-50%, -50%) translateY(-10px); }
-          100% { transform: translate(-50%, -50%) translateY(0px); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
 
     </div>
   );

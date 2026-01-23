@@ -20,6 +20,7 @@ import CBTCenter from './pages/CBTSelection';
 import MateriViewer from './pages/MaterialViewer';
 import MateriReader from './pages/MateriReader';
 import OSCEStation from './pages/OSCEStation';
+import OSCIECenter from './pages/OSCIECenter';
 import FlashcardDrill from './pages/FlashcardDrill';
 import UserProfile from './pages/Profile';
 import AdminDashboard from './pages/AdminPanel';
@@ -52,6 +53,7 @@ function App() {
                 
                 {/* Skill & Drill Routes */}
                 <Route path="osce" element={<OSCEStation />} />
+                <Route path="oscie" element={<OSCIECenter />} />
                 <Route path="flashcards" element={<FlashcardDrill />} />
                 
                 {/* User Routes */}
