@@ -49,7 +49,6 @@ export default function Register() {
   const handleFinish = async () => {
     setIsLoading(true);
     try {
-      [cite_start]// FIX: Tambahkan formData.name sebagai argumen ke-3 [cite: 199]
       const userCredential = await register(formData.email, formData.password, formData.name);
       const user = userCredential.user;
 
