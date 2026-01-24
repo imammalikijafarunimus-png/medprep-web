@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { getDeviceId } from '../utils/device';
 import { PTM_UNIVERSITIES, STATE_UNIVERSITIES, PRIVATE_UNIVERSITIES } from '../data/universities';
 import { 
   ArrowRight, Check, ChevronRight, School, 
@@ -64,6 +65,9 @@ export default function Register() {
           showIslamicInsight: false,
           showPrayerTimes: formData.segment === 'muhammadiyah' 
         },
+        // TAMBAHAN: Simpan Session ID
+        lastDeviceId: getDeviceId(), 
+        lastLoginAt: serverTimestamp(),
         createdAt: serverTimestamp()
       });
       

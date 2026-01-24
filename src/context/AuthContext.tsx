@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { 
   onAuthStateChanged, 
-  User as FirebaseUser, // 1. Kita ganti nama import Firebase jadi 'FirebaseUser' biar gak bentrok
+  User as FirebaseUser, 
   UserCredential, 
   GoogleAuthProvider, 
   signInWithPopup,
@@ -10,15 +10,16 @@ import {
   signInWithEmailAndPassword,
   updateProfile 
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase'; 
+// TAMBAHAN: Import onSnapshot untuk real-time update
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'; 
+import { auth, db } from '../lib/firebase';
+import { getDeviceId } from '../utils/device'; // <-- Import helper tadi
 
-// 2. Gunakan nama 'AppUser' untuk interface aplikasi kita
 export interface AppUser {
   uid: string;
   email: string | null;
-  displayName: string | null; // Izinkan null agar sesuai dengan Firebase
-  photoURL: string | null;    // Izinkan null
+  displayName: string | null;
+  photoURL: string | null;
   subscriptionStatus?: 'free' | 'premium';
 }
 
@@ -53,13 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
     if (userCredential.user) {
         await updateProfile(userCredential.user, {
             displayName: name
         });
-        
-        // Update state manual agar sesuai tipe AppUser
         setCurrentUser({
             uid: userCredential.user.uid,
             email: userCredential.user.email,
@@ -84,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await updateProfile(auth.currentUser, {
             displayName: name
         });
-        // Update state lokal
         setCurrentUser((prev) => prev ? { ...prev, displayName: name } : null);
     } else {
         throw new Error("Tidak ada user yang login");
@@ -92,10 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeSnapshot: () => void;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-         // Cek status subscription di Firestore
+         // 1. Setup User State Awal
          let subStatus: 'free' | 'premium' = 'free';
+         
+         // Ambil data awal (untuk subscription, dll)
          try {
             const docRef = doc(db, "users", firebaseUser.uid);
             const docSnap = await getDoc(docRef);
@@ -109,7 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
              console.error("Gagal ambil status user", err);
          }
 
-         // Mapping dari FirebaseUser ke AppUser
          const userForState: AppUser = {
              uid: firebaseUser.uid,
              email: firebaseUser.email,
@@ -117,14 +117,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
              photoURL: firebaseUser.photoURL,
              subscriptionStatus: subStatus
          };
-         
          setCurrentUser(userForState);
+
+         // 2. LOGIKA KICK DEVICE (Real-time Listener)
+         // Kita pantau dokumen user ini terus menerus
+         const userDocRef = doc(db, "users", firebaseUser.uid);
+         unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                const currentDeviceId = getDeviceId();
+                const serverDeviceId = data.lastDeviceId;
+
+                // Jika di database ada ID device, tapi beda dengan ID browser ini
+                // Maka force logout
+                if (serverDeviceId && serverDeviceId !== currentDeviceId) {
+                    // Cek agar tidak looping logout terus menerus
+                    alert("Akun Anda telah login di perangkat lain. Sesi ini akan diakhiri.");
+                    signOut(auth).then(() => {
+                        window.location.href = '/login'; // Redirect paksa
+                    });
+                }
+            }
+         });
+
       } else {
          setCurrentUser(null);
+         // Bersihkan listener snapshot jika user logout
+         if (unsubscribeSnapshot) unsubscribeSnapshot();
       }
       setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+        unsubscribeAuth();
+        if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
   }, []);
 
   const value = {

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'; 
+import { db } from '../lib/firebase';
+import { getDeviceId } from '../utils/device'; // <-- Import helper
 import { Mail, Lock, ArrowRight, AlertCircle, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
@@ -23,7 +26,17 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      // 1. Lakukan Login Auth
+      const userCredential = await login(formData.email, formData.password);
+      const user = userCredential.user;
+
+      // 2. TAMBAHAN: Update Device ID di Firestore
+      // Ini yang akan menendang device lama
+      await updateDoc(doc(db, "users", user.uid), {
+          lastDeviceId: getDeviceId(),
+          lastLoginAt: serverTimestamp()
+      });
+
       navigate('/app/dashboard');
     } catch (err: any) {
       let msg = "Gagal masuk. Periksa kembali email dan password Anda.";
@@ -146,7 +159,7 @@ export default function Login() {
             
             <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 text-[10px] font-bold text-amber-700 dark:text-amber-400">
               <Sparkles size={12} fill="currentColor" />
-              <span>Login untuk akses Insight & Bioetika</span>
+              <span>Login untuk akses Bank Soal & Checklist OSCE</span>
             </div>
           </div>
 
