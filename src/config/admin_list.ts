@@ -6,7 +6,7 @@ export const ALLOWED_ADMINS = [
     "admin@medprep.id",
     "asisten1@gmail.com",
     "editor_soal@gmail.com",
-    // Tambahkan sampai 5 atau lebih
+    // Tambahkan sampai 5 atau lebih email
   ];
   
   export const isAdmin = (email: string | null | undefined) => {
