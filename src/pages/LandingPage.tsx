@@ -4,27 +4,27 @@ import {
   Menu, X, Check, ArrowRight, Brain, Stethoscope, Heart, 
   BookOpen, Star, Shield, PlayCircle, Moon, Sun, Users, Award, 
   CheckCircle2, Sparkles, Zap, Quote, Instagram, MessageCircle,
-  PenTool, Smartphone
+  Clock, ListChecks, Mic, AlertCircle, HeartHandshake
 } from 'lucide-react';
 
 // --- DATA TESTIMONI ---
 const TESTIMONIALS = [
   {
-    name: "dr. Aditya, S.Ked",
-    role: "Lulusan UKMPPD Batch 1 2025",
-    univ: "Univ. Indonesia",
+    name: "dr. Fasha, S.Ked",
+    role: "Lulusan UKMPPD Batch Nov 2025",
+    univ: "Univ. Diponegoro",
     quote: "Fitur Insight-nya benar-benar 'game changer'. Saat ujian OSCE stase psikiatri dan bioetika, saya jadi jauh lebih tenang dan percaya diri."
   },
   {
-    name: "Siti Rahma",
+    name: "Amirah Nur Fauziana, S.Ked",
     role: "Mahasiswa FK Tahap Profesi",
-    univ: "UM Yogyakarta",
+    univ: "Univ. Muhammadiyah Semarang",
     quote: "Bank soalnya sangat relevan. Pembahasan tidak hanya medis, tapi ada 'touch' kemanusiaan yang sering dilupakan di buku teks biasa."
   },
   {
-    name: "Fajar Santoso",
-    role: "Co-Ass Stase Bedah",
-    univ: "Univ. Brawijaya",
+    name: "Annisa Putri Sophia, S.Ked",
+    role: "Co-Ass Stase Jiwa",
+    univ: "Univ. Abdurrab",
     quote: "Checklist OSCE-nya juara. Runtut, sistematis, dan timernya bikin simulasi berasa ujian beneran. Wajib punya buat pejuang One Shot."
   }
 ];
@@ -35,43 +35,49 @@ const TEAM_DIVISIONS = [
     title: "CBT Center & Flashcard",
     color: "text-indigo-500",
     members: [
-      { name: "dr. Imam", title: "Top 10 IPK FK Unimus Batch Nov 2025", gender: "male" }
+      { name: "dr. Imam Maliki Ja'far", title: "Tim Penyusun", gender: "male" },
+      { name: "dr. Anggita Rahma Fedyasati", title: "Tim Ahli Materi", gender: "female" },
+      { name: "dr. Indah Ainun Faroch", title: "Tim Ahli Materi", gender: "female" },
     ]
   },
   {
     title: "OSCE Checklist",
     color: "text-teal-500",
     members: [
-      { name: "dr. Krishna", title: "Nilai OSCE Tertinggi Batch Feb 2025", gender: "male" },
-      { name: "dr. Kharisma", title: "Nilai OSCE Tertinggi Batch Feb 2025", gender: "female" },
-      { name: "dr. Fath", title: "Tim Ahli Materi", gender: "male" },
-      { name: "dr. Azzaozi", title: "Tim Ahli Materi", gender: "male" },
-      { name: "dr. Andi", title: "Tim Ahli Materi", gender: "male" },
+      { name: "dr. Krishnapatti Panjalu", title: "Tim Penyusun", gender: "male" },
+      { name: "dr. Kharisma Muhammad", title: "Tim Penyusun", gender: "male" },
+      { name: "dr. Imam Maliki Ja'far", title: "Tim Penyusun", gender: "male" },
+      { name: "dr. Muhammad Fath Faiz", title: "Tim Ahli Materi", gender: "male" },
+      { name: "dr. Wahyu Hidayat Azzaozi", title: "Tim Ahli Materi", gender: "male" },
+      { name: "dr. Nurahmat Yanisa Irfandi", title: "Tim Ahli Materi", gender: "male" },
     ]
   },
   {
     title: "OSCE Cases",
     color: "text-rose-500",
     members: [
-      { name: "dr. Feby", title: "Top 1 IPK FK Unimus Batch Nov 2025", gender: "female" },
-      { name: "dr. Indria", title: "Nilai Tertinggi CBT UKMPPD Nov 2025", gender: "female" },
-      { name: "dr. Vina", title: "Nilai Tertinggi CBT UKMPPD Nov 2025", gender: "female" },
-      { name: "dr. Imam", title: "Koordinator", gender: "male" },
-      { name: "dr. Intan", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Putri", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Alya", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Adela", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Jihan", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Wajihahni", title: "Tim Penyusun", gender: "female" },
-      { name: "dr. Ulya", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Feby Ananda Putri", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Indria Zulfani M.T.", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Vina Shofiyatul Izaah", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Imam Maliki Ja'far", title: "Koordinator", gender: "male" },
+      { name: "dr. Intan Purnamasari", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Putri Ika Nur Apriani", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Alya Yasmin Adhi", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Adela Zafira", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Jihan Ayuningsih", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Wajihahni Rodiyah", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Rohmatul Ulya", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Hanifah Resti M.", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Yuyun Ayu Safitri", title: "Tim Penyusun", gender: "female" },
+      { name: "dr. Aulia Zulfiana", title: "Tim Penyusun", gender: "female" },
     ]
   },
   {
     title: "OSCIE & Bioetika",
     color: "text-emerald-500",
     members: [
-      { name: "dr. Imam", title: "Koordinator OSCIE", gender: "male" },
-      { name: "dr. Kharisma", title: "Konsultan Fiqih Medis", gender: "female" },
+      { name: "dr. Imam Maliki Ja'far", title: "Koordinator OSCIE", gender: "male" },
+      { name: "dr. Kharisma Muhammad", title: "Konsultan Fiqih Medis", gender: "male" },
     ]
   }
 ];
@@ -82,6 +88,9 @@ export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [demoMode, setDemoMode] = useState<'medis' | 'insight'>('medis');
+  
+  // STATE PRICING (NEW)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'midyear' | 'lifetime'>('midyear');
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -101,6 +110,25 @@ export default function LandingPage() {
   const getAvatar = (gender: string, seed: string) => 
     `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&gender=${gender}&clothing=blazerAndShirt`;
 
+  // PRICING LOGIC
+  const getPrice = (plan: 'basic' | 'expert') => {
+      if (plan === 'basic') {
+          if (billingCycle === 'monthly') return '15rb';
+          if (billingCycle === 'midyear') return '45rb';
+          return '99rb';
+      } else {
+          if (billingCycle === 'monthly') return '25rb';
+          if (billingCycle === 'midyear') return '75rb';
+          return '149rb';
+      }
+  };
+
+  const getDurationLabel = () => {
+      if (billingCycle === 'monthly') return '/ bulan';
+      if (billingCycle === 'midyear') return 'per 6 bulan';
+      return 'sekali bayar';
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#050505] font-sans text-slate-900 dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-teal-500 selection:text-white">
       
@@ -119,7 +147,7 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 font-bold text-sm text-slate-500 dark:text-slate-400">
-            {['Fitur', 'OSCIE', 'Testimoni', 'Harga', 'Kontributor'].map((item) => (
+            {['Home', 'Fitur', 'Testimoni', 'Harga'].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-teal-600 dark:hover:text-white transition-colors">{item}</a>
             ))}
           </div>
@@ -140,7 +168,7 @@ export default function LandingPage() {
         
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 w-full bg-white/95 dark:bg-black/95 backdrop-blur-xl border-b border-slate-100 dark:border-white/10 p-6 flex flex-col gap-4 shadow-xl">
-            {['Fitur', 'OSCIE', 'Testimoni', 'Harga', 'Kontributor'].map((item) => (<a key={item} href={`#${item.toLowerCase()}`} onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-bold text-slate-600 dark:text-slate-300 py-2">{item}</a>))}
+            {['Home', 'Fitur', 'Testimoni', 'Harga'].map((item) => (<a key={item} href={`#${item.toLowerCase()}`} onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-bold text-slate-600 dark:text-slate-300 py-2">{item}</a>))}
             <hr className="border-slate-100 dark:border-white/10"/>
             <button onClick={() => navigate('/login')} className="w-full py-3 font-bold text-slate-600 dark:text-slate-300">Masuk</button>
             <button onClick={() => navigate('/register')} className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold">Daftar Sekarang</button>
@@ -259,10 +287,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* DEMO INTERACTIVE */}
-      <section className="py-24 px-6 relative overflow-hidden">
+      {/* --- SECTION: MOCKUP CBT & OSCE (UPDATED CONTENT) --- */}
+      <section className="py-24 px-6 bg-slate-50 dark:bg-black relative overflow-hidden">
+          <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-16 relative z-10">
+                  <h2 className="text-3xl md:text-4xl font-black mb-4 text-slate-900 dark:text-white">Intip Kedalaman Platform</h2>
+                  <p className="text-lg text-slate-500 dark:text-slate-400">Desain antarmuka yang fokus pada fokus Anda.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-10 items-stretch">
+                  
+                  {/* CARD 1: CBT MOCKUP (Updated) */}
+                  <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                      <div className="relative h-full bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10 overflow-hidden shadow-xl p-8 flex flex-col">
+                          <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Brain size={20} /></div>
+                              <h3 className="text-xl font-bold text-slate-900 dark:text-white">CBT Bank</h3>
+                          </div>
+                          
+                          <div className="flex-1 space-y-4">
+                              <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                  <span>Kardiologi UKMPPD 2024 Batch Mei - Soal No. 45</span>
+                                  <span className="text-rose-500 flex items-center gap-1"><Clock size={12}/> 00:58</span>
+                              </div>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                                  Seorang laki-laki 50 tahun datang dengan keluhan nyeri dada kiri menjalar ke rahang dan lengan kiri sejak 2 jam SMRS. Nyeri dirasakan seperti tertindih beban berat. Pemeriksaan EKG menunjukkan ST elevasi di lead II, III, aVF. Diagnosis pasien yang paling tepat?
+                              </p>
+                              <div className="space-y-2 mt-4">
+                                  {['STEMI Inferior', 'STEMI Anterior', 'STEMI Lateral', 'NSTEMI'].map((opt, i) => (
+                                      <div key={i} className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-3 ${i === 0 ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 dark:border-slate-700 text-slate-500'}`}>
+                                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${i === 0 ? 'border-white' : 'border-slate-300'}`}>{String.fromCharCode(65+i)}</div>
+                                          {opt}
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* CARD 2: OSCE MOCKUP (Updated) */}
+                  <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                      <div className="relative h-full bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10 overflow-hidden shadow-xl p-8 flex flex-col">
+                          <div className="flex items-center justify-between mb-6">
+                              <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-lg"><ListChecks size={20} /></div>
+                                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">OSCE Master</h3>
+                              </div>
+                              <span className="bg-teal-50 text-teal-600 border border-teal-200 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                  <Mic size={10} /> Script ON
+                              </span>
+                          </div>
+
+                          <div className="flex-1">
+                              <div className="flex justify-between items-end mb-4 border-b border-slate-100 dark:border-white/5 pb-4">
+                                  <div>
+                                      <span className="text-[10px] text-slate-400 font-bold uppercase">Station 4 - Musculoskeletal</span>
+                                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">Pemeriksaan Fisik Ankle</h4>
+                                  </div>
+                                  <div className="text-2xl font-mono font-black text-slate-900 dark:text-white">08:30</div>
+                              </div>
+                              <div className="space-y-3">
+                                  <div className="p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl">
+                                      <div className="flex justify-between mb-1">
+                                          <span className="text-xs font-bold text-red-600 dark:text-red-400">Thompson Test</span>
+                                          <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded">CRITICAL</span>
+                                      </div>
+                                      <p className="text-[10px] text-slate-600 dark:text-slate-400 italic mb-2">"Saya akan meremas otot betis pasien dalam posisi tengkurap..."</p>
+                                      <div className="flex items-center gap-2 text-[10px] font-medium text-slate-500">
+                                          <AlertCircle size={10} /> Interpretasi: Kaki tidak plantar fleksi? Curiga ruptur tendon Achilles.
+                                      </div>
+                                  </div>
+                                  <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-xl">
+                                      <span className="text-xs font-bold text-slate-800 dark:text-white">Anterior Drawer Test</span>
+                                      <p className="text-[10px] text-slate-500 mt-1">Cek stabilitas ligamen talofibular anterior (ATFL).</p>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+      </section>
+
+      {/* DEMO INTERACTIVE (INSIGHT) */}
+      <section className="py-24 px-6 relative overflow-hidden border-t border-slate-100 dark:border-white/5">
         <div className="max-w-5xl mx-auto relative z-10">
             <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 rounded-full text-xs uppercase tracking-widest border border-emerald-100 dark:border-emerald-800">
+                    <Sparkles size={14} /> Fitur Pendukung
+                </div>
                 <h2 className="text-3xl md:text-4xl font-black mb-4 text-slate-900 dark:text-white">Satu Aplikasi, Dua Dunia.</h2>
                 <p className="text-lg text-slate-500 dark:text-slate-400">Geser toggle untuk melihat bagaimana MedPrep mengubah cara Anda belajar.</p>
             </div>
@@ -345,14 +461,29 @@ export default function LandingPage() {
           </div>
       </section>
 
-      {/* PRICING */}
+      {/* PRICING (UPDATED) */}
       <section id="harga" className="py-24 px-6">
           <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16">
+              <div className="text-center mb-12">
                   <h2 className="text-4xl font-black mb-4 text-slate-900 dark:text-white">Investasi Cerdas.</h2>
-                  <p className="text-slate-500 dark:text-slate-400">Paket fleksibel untuk setiap tahap belajar.</p>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8">Pilih paket sesuai target kelulusanmu.</p>
+                  
+                  {/* PRICING TOGGLE */}
+                  <div className="inline-flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-white/10">
+                      {(['monthly', 'midyear', 'lifetime'] as const).map((cycle) => (
+                          <button 
+                            key={cycle}
+                            onClick={() => setBillingCycle(cycle)}
+                            className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingCycle === cycle ? 'bg-white dark:bg-slate-700 shadow-md text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                          >
+                              {cycle === 'monthly' ? 'Bulanan' : cycle === 'midyear' ? '6 Bulan' : 'Selamanya'}
+                          </button>
+                      ))}
+                  </div>
               </div>
+
               <div className="grid md:grid-cols-3 gap-8 items-end">
+                  
                   {/* STARTER */}
                   <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10">
                       <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Starter</span>
@@ -365,12 +496,13 @@ export default function LandingPage() {
                       </ul>
                       <button onClick={() => navigate('/register')} className="w-full py-3 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Daftar Gratis</button>
                   </div>
+
                   {/* BASIC */}
                   <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-indigo-500 shadow-2xl relative transform md:-translate-y-4">
                       <div className="absolute -top-4 inset-x-0 flex justify-center"><span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">Rekomendasi PTN</span></div>
                       <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Basic</span>
-                      <h3 className="text-4xl font-black mt-4 mb-2 text-slate-900 dark:text-white">45rb</h3>
-                      <p className="text-xs text-slate-500 mb-8">per 6 bulan.</p>
+                      <h3 className="text-4xl font-black mt-4 mb-2 text-slate-900 dark:text-white">{getPrice('basic')}</h3>
+                      <p className="text-xs text-slate-500 mb-8">{getDurationLabel()}</p>
                       <ul className="space-y-4 mb-8 text-sm font-bold text-slate-700 dark:text-white">
                           <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500"/> Full Bank Soal</li>
                           <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500"/> Full Ceklis OSCE</li>
@@ -378,7 +510,8 @@ export default function LandingPage() {
                       </ul>
                       <button onClick={() => navigate('/register')} className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg hover:shadow-indigo-500/30 transition-all">Pilih Basic</button>
                   </div>
-                  {/* EXPERT (FIXED) */}
+
+                  {/* EXPERT */}
                   <div className="relative transform md:-translate-y-4">
                       <div className="absolute -top-4 inset-x-0 flex justify-center z-20">
                           <span className="bg-emerald-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">Rekomendasi PTM</span>
@@ -387,8 +520,8 @@ export default function LandingPage() {
                           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl"></div>
                           <div className="relative z-10 mt-2">
                               <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">Expert</span>
-                              <h3 className="text-4xl font-black mt-4 mb-2">75rb</h3>
-                              <p className="text-xs text-slate-400 mb-8">per 6 bulan.</p>
+                              <h3 className="text-4xl font-black mt-4 mb-2">{getPrice('expert')}</h3>
+                              <p className="text-xs text-slate-400 mb-8">{getDurationLabel()}</p>
                               <ul className="space-y-4 mb-8 text-sm text-slate-300">
                                   <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400"/> Semua Fitur Basic</li>
                                   <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400"/> <strong className="text-white">Akses OSCIE Center</strong></li>
@@ -400,6 +533,14 @@ export default function LandingPage() {
                           </div>
                       </div>
                   </div>
+              </div>
+
+              {/* DONASI JARIYAH */}
+              <div className="mt-12 text-center opacity-60">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+                      <HeartHandshake size={14} className="text-teal-500"/> 
+                      Sebagian keuntungan (30%) akan didonasikan untuk kegiatan sosial kesehatan & pengembangan fitur gratis.
+                  </p>
               </div>
           </div>
       </section>
@@ -446,7 +587,7 @@ export default function LandingPage() {
           <div className="max-w-2xl mx-auto text-center">
               <Quote size={24} className="mx-auto mb-6 text-slate-300 dark:text-slate-700" />
               <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-loose">
-                  "Buku ini lahir dari semangat belajar dan berbagi, sebagai panduan bagi rekan-rekan sejawat yang sedang menapaki perjalanan menjadi dokter sejati. Setiap lembar ditulis dengan harapan agar ilmu, keterampilan, dan nilai kemanusiaan dapat berjalan beriringan dalam setiap ujian—baik di meja OSCE maupun di medan pelayanan nyata. Semoga karya sederhana ini menjadi bagian kecil dari perjuangan besar kita dalam mengabdi kepada kesehatan bangsa."
+                  "Aplikasi ini lahir dari semangat belajar dan berbagi, sebagai panduan bagi rekan-rekan sejawat yang sedang menapaki perjalanan menjadi dokter sejati. Setiap lembar ditulis dengan harapan agar ilmu, keterampilan, dan nilai kemanusiaan dapat berjalan beriringan dalam setiap ujian, baik di meja OSCE maupun di medan pelayanan nyata. Semoga karya sederhana ini menjadi bagian kecil dari perjuangan besar kita dalam mengabdi kepada kesehatan bangsa."
               </p>
               <div className="mt-8 flex items-center justify-center gap-3 opacity-50">
                   <div className="h-px w-8 bg-slate-400"></div>
@@ -469,7 +610,7 @@ export default function LandingPage() {
               </div>
           </div>
           <div className="text-center mt-12 pt-8 border-t border-slate-100 dark:border-white/5 mx-6">
-              <p className="text-[10px] text-slate-400">© 2026 MedPrep Indonesia. Dibuat dengan 💙 dan ☕ untuk sejawat.</p>
+              <p className="text-[10px] text-slate-400">© 2026 MedPrep Indonesia. Dibuat dengan 💙 untuk sejawat.</p>
           </div>
       </footer>
 

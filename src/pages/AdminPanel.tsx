@@ -6,7 +6,7 @@ import {
   HelpCircle, BookOpen, PenTool, Upload, FileJson, 
   AlertTriangle, Sparkles, Lock, Unlock,
   Users, Search, Crown, CheckCircle, Calendar, Layers, Hash,
-  Star, Shield, XCircle, Filter, X
+  Star, Shield, XCircle, Filter, X, BadgeCheck
 } from 'lucide-react';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -37,12 +37,14 @@ interface CBTQuestion {
   createdAt?: any;
 }
 
+// [UPGRADE] Tambah SKDI di Interface
 interface CBTMaterial {
   id?: string;
   system: string;
   title: string;
   content: string;
   category: string;
+  skdi?: string; // New Field
   insight?: string;
   type?: 'free' | 'premium';
   createdAt?: any;
@@ -62,11 +64,11 @@ export default function AdminDashboard() {
   const [materials, setMaterials] = useState<CBTMaterial[]>([]);
   const [users, setUsers] = useState<UserData[]>([]); 
   
-  // FILTER STATE (NEW)
-  const [searchTerm, setSearchTerm] = useState(''); // Untuk Users & Konten
+  // FILTER STATE
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterSystem, setFilterSystem] = useState('All');
   const [filterType, setFilterType] = useState('All');
-  const [filterBatch, setFilterBatch] = useState(''); // Khusus Soal
+  const [filterBatch, setFilterBatch] = useState('');
 
   // FORM INPUT STATE
   const [formSoal, setFormSoal] = useState<CBTQuestion>({
@@ -81,11 +83,13 @@ export default function AdminDashboard() {
     examBatch: ''
   });
 
+  // [UPGRADE] State Materi dengan SKDI
   const [formMateri, setFormMateri] = useState<CBTMaterial>({
-    system: 'Respirasi',
+    system: 'Neurologi',
     title: '',
     content: '',
     category: 'High Yield',
+    skdi: '', // Default kosong
     insight: '',
     type: 'free'
   });
@@ -125,7 +129,7 @@ export default function AdminDashboard() {
       try { 
           await addDoc(collection(db, "cbt_materials"), { ...formMateri, createdAt: serverTimestamp() }); 
           toast.success("Materi Berhasil Disimpan!", { id: toastId }); 
-          setFormMateri(prev => ({ ...prev, title: '', content: '', insight: '' })); 
+          setFormMateri(prev => ({ ...prev, title: '', content: '', insight: '', skdi: '' })); // Reset form
       } catch (error) { toast.error("Gagal menyimpan", { id: toastId }); } 
       finally { setLoading(false); }
   };
@@ -178,7 +182,7 @@ export default function AdminDashboard() {
       }
   };
   
-  // JSON IMPORT LOGIC
+  // JSON IMPORT LOGIC [UPGRADE SKDI]
   const processJsonData = async (jsonData: any[]) => {
       const collectionName = activeSection === 'soal' ? "cbt_questions" : "cbt_materials";
       for (let i = 0; i < jsonData.length; i++) {
@@ -188,10 +192,28 @@ export default function AdminDashboard() {
               type: item.type || 'free',
               createdAt: serverTimestamp()
           };
+          
           if(activeSection === 'soal') {
-             payload = { ...payload, question: item.question, options: item.options, correctAnswer: item.correctAnswer, explanation: item.explanation, insight: item.insight, examYear: item.examYear || formSoal.examYear, examBatch: item.examBatch || formSoal.examBatch };
+             payload = { 
+                 ...payload, 
+                 question: item.question, 
+                 options: item.options, 
+                 correctAnswer: item.correctAnswer, 
+                 explanation: item.explanation, 
+                 insight: item.insight, 
+                 examYear: item.examYear || formSoal.examYear, 
+                 examBatch: item.examBatch || formSoal.examBatch 
+             };
           } else {
-             payload = { ...payload, title: item.title, content: item.content, category: item.category, insight: item.insight };
+             // [UPGRADE] Mapping SKDI dan Category
+             payload = { 
+                 ...payload, 
+                 title: item.title || item.topic, // Handle 'topic' key from previous version
+                 content: item.content, 
+                 category: item.category || 'High Yield', 
+                 skdi: item.skdi || '',
+                 insight: item.insight 
+             };
           }
           await addDoc(collection(db, collectionName), payload);
       }
@@ -272,8 +294,8 @@ export default function AdminDashboard() {
                  <LayoutDashboard size={32} />
              </div>
              <div>
-                 <h1 className="text-3xl font-black text-white mb-1">Admin Panel</h1>
-                 <p className="text-slate-400">Pusat Kontrol MedPrep OS.</p>
+                 <h1 className="text-3xl font-black text-white mb-1">Admin Panel v2.0</h1>
+                 <p className="text-slate-400">Pusat Kontrol MedPrep OS (Updated with SKDI Support).</p>
              </div>
          </div>
       </div>
@@ -281,11 +303,11 @@ export default function AdminDashboard() {
       {/* NAVIGASI UTAMA */}
       <div className="flex p-1.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
         <button onClick={() => { setActiveSection('soal'); setActiveTab('input'); }} className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeSection === 'soal' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><HelpCircle size={18} /> Bank Soal</button>
-        <button onClick={() => { setActiveSection('materi'); setActiveTab('input'); }} className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeSection === 'materi' ? 'bg-pink-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><BookOpen size={18} /> Materi</button>
+        <button onClick={() => { setActiveSection('materi'); setActiveTab('input'); }} className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeSection === 'materi' ? 'bg-pink-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><BookOpen size={18} /> Materi & SKDI</button>
         <button onClick={() => { setActiveSection('users'); }} className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeSection === 'users' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><Users size={18} /> User Manager</button>
       </div>
 
-      {/* === SECTION: USER MANAGER (3 LEVEL) === */}
+      {/* === SECTION: USER MANAGER === */}
       {activeSection === 'users' && (
          <div className="space-y-6">
               <div className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex items-center gap-3 shadow-sm">
@@ -309,7 +331,7 @@ export default function AdminDashboard() {
                                     <td className="p-6">
                                         <p className="font-bold text-slate-900 dark:text-white text-base">{user.displayName || user.name || 'User Tanpa Nama'}</p>
                                         <p className="text-xs text-slate-500 font-mono mt-1">{user.email}</p>
-                                        <span className="text-[10px] text-slate-400 mt-1 block">{user.university} ({user.segment})</span>
+                                        <span className="text-[10px] text-slate-400 mt-1 block">{user.university}</span>
                                     </td>
                                     <td className="p-6">
                                         {user.subscriptionStatus === 'expert' || user.subscriptionStatus === 'premium' ? (
@@ -371,7 +393,7 @@ export default function AdminDashboard() {
                 </div>
               
                 <form onSubmit={activeSection === 'soal' ? handleSimpanSoal : handleSimpanMateri} className="space-y-6">
-                    {/* INPUT FORM (SAMA SEPERTI SEBELUMNYA) */}
+                    {/* INPUT FORM */}
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
                             <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Sistem Organ</label>
@@ -393,6 +415,34 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* FIELD KHUSUS MATERI (SKDI & KATEGORI) */}
+                    {activeSection === 'materi' && (
+                        <div className="grid md:grid-cols-2 gap-6 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-2xl border border-pink-100 dark:border-pink-800">
+                             <div>
+                                <label className="text-xs font-bold text-pink-500 mb-2 block">SKDI (Kompetensi)</label>
+                                <select value={formMateri.skdi} onChange={(e) => setFormMateri({...formMateri, skdi: e.target.value})} className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-800 font-bold">
+                                    <option value="">- Pilih SKDI -</option>
+                                    <option value="1">1 (Mengenali)</option>
+                                    <option value="2">2 (Mendiagnosis)</option>
+                                    <option value="3A">3A (Bukan Gawat Darurat)</option>
+                                    <option value="3B">3B (Gawat Darurat)</option>
+                                    <option value="4A">4A (Tuntas Mandiri)</option>
+                                    <option value="4B">4B (Mahir)</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label className="text-xs font-bold text-pink-500 mb-2 block">KATEGORI</label>
+                                <select value={formMateri.category} onChange={(e) => setFormMateri({...formMateri, category: e.target.value})} className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-800 font-bold">
+                                    <option value="High Yield">High Yield</option>
+                                    <option value="Red Flag">Red Flag</option>
+                                    <option value="Skill Lab">Skill Lab</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="Tatalaksana">Tatalaksana</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
 
                     {/* FIELD KHUSUS SOAL (BATCH & TAHUN) */}
                     {activeSection === 'soal' && (
@@ -450,7 +500,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* TAB 2: IMPORT JSON (FIXED) */}
+          {/* TAB 2: IMPORT JSON */}
           {activeTab === 'import' && (
              <div className="space-y-8 max-w-3xl mx-auto animate-in fade-in slide-in-from-right duration-300">
                 <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl text-center">
@@ -467,7 +517,7 @@ export default function AdminDashboard() {
                 
                 <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white"><PenTool size={20} /> Paste JSON Text</h3>
-                    <textarea value={jsonTextInput} onChange={(e) => setJsonTextInput(e.target.value)} className="w-full h-48 p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl font-mono text-xs mb-6 outline-none text-slate-700 dark:text-slate-300" placeholder='[ { "question": "...", "options": {...} } ]' />
+                    <textarea value={jsonTextInput} onChange={(e) => setJsonTextInput(e.target.value)} className="w-full h-48 p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl font-mono text-xs mb-6 outline-none text-slate-700 dark:text-slate-300" placeholder='[ { "title": "Bell Palsy", "skdi": "4A", ... } ]' />
                     <button onClick={handleTextImport} className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20 transition-all">
                         <Upload size={20} /> Proses Import Text
                     </button>
@@ -475,12 +525,11 @@ export default function AdminDashboard() {
              </div>
           )}
           
-          {/* TAB 3: LIST DATA (NEW SEARCH & FILTER) */}
+          {/* TAB 3: LIST DATA */}
           {activeTab === 'list' && (
              <div className="space-y-6">
                  {/* SEARCH & FILTER BAR */}
                  <div className="bg-white dark:bg-slate-900 p-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4">
-                     {/* Search Text */}
                      <div className="flex-1 relative">
                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                          <input 
@@ -491,16 +540,12 @@ export default function AdminDashboard() {
                             className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-950 rounded-xl outline-none text-sm font-medium"
                          />
                      </div>
-                     
-                     {/* Filter System */}
                      <div className="relative w-40">
                          <select value={filterSystem} onChange={(e) => setFilterSystem(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-950 rounded-xl outline-none text-xs font-bold appearance-none">
                              <option value="All">Semua Sistem</option>
                              {SYSTEM_LIST.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
                          </select>
                      </div>
-
-                     {/* Filter Type */}
                      <div className="relative w-32">
                          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-950 rounded-xl outline-none text-xs font-bold appearance-none">
                              <option value="All">Semua Tipe</option>
@@ -508,19 +553,6 @@ export default function AdminDashboard() {
                              <option value="premium">Premium</option>
                          </select>
                      </div>
-
-                     {/* Filter Batch (Soal Only) */}
-                     {activeSection === 'soal' && (
-                         <div className="w-40 relative">
-                             <input 
-                                type="text" 
-                                placeholder="Filter Batch/Thn" 
-                                value={filterBatch}
-                                onChange={(e) => setFilterBatch(e.target.value)}
-                                className="w-full p-3 bg-slate-50 dark:bg-slate-950 rounded-xl outline-none text-xs font-bold"
-                             />
-                         </div>
-                     )}
                  </div>
 
                  <div className="flex justify-between items-center px-2">
@@ -553,6 +585,11 @@ export default function AdminDashboard() {
                             <div className="flex gap-2 mb-3">
                                 <span className="bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">{m.system}</span>
                                 <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">{m.category}</span>
+                                {m.skdi && (
+                                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-purple-200">
+                                        <BadgeCheck size={12}/> SKDI {m.skdi}
+                                    </span>
+                                )}
                                 {getTypeBadge(m.type)}
                             </div>
                             <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">{m.title}</h4>

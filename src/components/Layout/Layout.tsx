@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutGrid, GraduationCap, Stethoscope, Zap, User, 
-  Sun, Moon, BookOpen, Search, Bell, LogOut, ChevronRight,
-  ShieldCheck, Settings, Sparkles, Lock, X
+  Sun, Moon, BookOpen, Search, LogOut, ChevronRight,
+  ShieldCheck, Settings, Sparkles, Lock, X, 
+  ChevronsLeft, ChevronsRight, Menu, Brain
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore'; 
@@ -15,16 +16,20 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  // STATE UI
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  // STATE DATA
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
   
-  // STATE GLOBAL INSIGHT MODE
+  // STATE FITUR
   const [isInsightActive, setIsInsightActive] = useState(localStorage.getItem('medprep_insight_active') === 'true');
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -51,6 +56,8 @@ export default function Layout() {
       if(isSearchOpen && searchInputRef.current) searchInputRef.current.focus();
   }, [isSearchOpen]);
 
+  // --- ACTIONS ---
+
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'read' : 'light');
   
   const getThemeIcon = () => {
@@ -74,21 +81,12 @@ export default function Layout() {
       else toast("Insight: OFF", { icon: '💤', style: { borderRadius: '10px', background: '#333', color: '#fff', fontSize: '12px' } });
   };
 
-  const getPageTitle = () => {
-      const path = location.pathname;
-      if (path.includes('/dashboard')) return 'Dashboard';
-      if (path.includes('/cbt')) return 'CBT Center';
-      if (path.includes('/osce')) return 'OSCE Center';
-      if (path.includes('/oscie')) return 'OSCIE Center';
-      if (path.includes('/flashcards')) return 'Flashcards';
-      if (path.includes('/profile')) return 'Profil';
-      return 'MedPrep';
-  };
-
+  // REAL SEARCH FUNCTION
   const handleSearch = (e: React.FormEvent) => {
       e.preventDefault();
       if(searchQuery.trim()) {
-          toast(`Mencari: ${searchQuery}`, { icon: '🔍' });
+          // Navigasi ke halaman pencarian dengan query parameter
+          navigate(`/app/search?q=${encodeURIComponent(searchQuery)}`);
           setIsSearchOpen(false);
           setSearchQuery('');
       }
@@ -100,62 +98,128 @@ export default function Layout() {
       }
   };
 
+  const getPageTitle = () => {
+      const path = location.pathname;
+      if (path.includes('/dashboard')) return 'Dashboard';
+      if (path.includes('/cbt')) return 'CBT Center';
+      if (path.includes('/osce')) return 'OSCE Center';
+      if (path.includes('/oscie')) return 'OSCIE Center';
+      if (path.includes('/flashcards')) return 'Flashcards';
+      if (path.includes('/profile')) return 'Profil';
+      if (path.includes('/search')) return 'Pencarian';
+      return 'MedPrep';
+  };
+
   const navItems = [
     { icon: LayoutGrid, label: 'Dashboard', path: '/app/dashboard' },
-    { icon: GraduationCap, label: 'CBT Center', path: '/app/cbt' },
+    { icon: Brain, label: 'CBT Center', path: '/app/cbt' },
     { icon: Stethoscope, label: 'OSCE Center', path: '/app/osce' },
-    { icon: Moon, label: 'OSCIE Center', path: '/app/oscie' },
+    { icon: Moon, label: 'OSCIE Center', path: '/app/oscie' }, 
     { icon: Zap, label: 'Flashcards', path: '/app/flashcards' },
-    { icon: User, label: 'Profil Saya', path: '/app/profile' },
+    { icon: User, label: 'Profil', path: '/app/profile' },
   ];
 
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${theme === 'read' ? 'bg-[#fbf6e9] text-[#433422]' : 'bg-slate-50 dark:bg-[#0B1120] dark:text-slate-200'}`}>
       
-      {/* SIDEBAR */}
-      <aside className="hidden md:flex fixed top-4 bottom-4 left-4 w-64 rounded-[2rem] bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/40 dark:border-white/5 shadow-xl flex-col py-6 px-4 z-50">
-        <div className="flex items-center gap-3 mb-6 px-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-400 to-blue-600 flex items-center justify-center text-white shadow-lg"><span className="font-black text-xl">M</span></div>
-            <div><h1 className="font-bold text-lg tracking-tight leading-none text-slate-800 dark:text-white">MedPrep</h1><p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Medical OS</p></div>
+      {/* ================= DESKTOP SIDEBAR (EXPANDABLE) ================= */}
+      <aside 
+        className={`hidden md:flex fixed top-4 bottom-4 left-4 rounded-[2rem] bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/40 dark:border-white/5 shadow-xl flex-col py-6 transition-all duration-300 z-50 ${isSidebarCollapsed ? 'w-20 px-2 items-center' : 'w-64 px-4'}`}
+      >
+        {/* Sidebar Header */}
+        <div className={`flex items-center mb-8 transition-all duration-300 ${isSidebarCollapsed ? 'justify-center' : 'justify-between px-2'}`}>
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-400 to-blue-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                    <span className="font-black text-xl">M</span>
+                </div>
+                {!isSidebarCollapsed && (
+                    <div className="animate-in fade-in duration-300">
+                        <h1 className="font-bold text-lg tracking-tight leading-none text-slate-800 dark:text-white">MedPrep</h1>
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Medical OS</p>
+                    </div>
+                )}
+            </div>
+            
+            {/* Toggle Button (Only visible when expanded, or can be moved) */}
+            {!isSidebarCollapsed && (
+                <button onClick={() => setIsSidebarCollapsed(true)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400">
+                    <ChevronsLeft size={18} />
+                </button>
+            )}
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
+
+        {/* Toggle Button (When Collapsed) */}
+        {isSidebarCollapsed && (
+            <button onClick={() => setIsSidebarCollapsed(false)} className="mb-6 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400">
+                <ChevronsRight size={20} />
+            </button>
+        )}
+
+        {/* Navigation Items */}
+        <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar w-full">
             {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
-                    <button key={item.path} onClick={() => navigate(item.path)} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive ? 'bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900' : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-medium'}`}>
-                        <item.icon size={20} className={`transition-transform group-hover:scale-110 ${isActive ? 'text-teal-400 dark:text-blue-600' : 'text-slate-400 dark:text-slate-500'}`} />
-                        <span className="text-xs tracking-wide font-bold">{item.label}</span>
-                        {isActive && <ChevronRight size={14} className="ml-auto opacity-50" />}
+                    <button 
+                        key={item.path} 
+                        onClick={() => navigate(item.path)} 
+                        className={`flex items-center transition-all duration-300 group relative overflow-hidden ${isSidebarCollapsed ? 'justify-center w-12 h-12 rounded-2xl mx-auto' : 'w-full gap-3 px-3 py-3 rounded-xl'} ${isActive ? 'bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900' : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-medium'}`}
+                        title={isSidebarCollapsed ? item.label : ''}
+                    >
+                        <item.icon size={20} className={`shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-teal-400 dark:text-blue-600' : 'text-slate-400 dark:text-slate-500'}`} />
+                        {!isSidebarCollapsed && (
+                            <>
+                                <span className="text-xs tracking-wide font-bold whitespace-nowrap">{item.label}</span>
+                                {isActive && <ChevronRight size={14} className="ml-auto opacity-50" />}
+                            </>
+                        )}
                     </button>
                 )
             })}
+            
+            {/* Admin Panel (Conditional) */}
             {(userProfile?.subscriptionStatus === 'premium' || userProfile?.subscriptionStatus === 'expert') && (
-                <div className="pt-3 mt-3 border-t border-slate-100 dark:border-white/10">
-                    <p className="px-3 text-[9px] font-bold uppercase text-slate-400 mb-1">Admin</p>
-                    <button onClick={() => navigate('/app/admin')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group ${location.pathname.startsWith('/app/admin') ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/20 dark:text-red-400' : 'hover:bg-red-50 text-slate-600 dark:text-slate-400 hover:text-red-500'}`}>
-                        <ShieldCheck size={20} className={location.pathname.startsWith('/app/admin') ? 'text-red-500' : ''} /><span className="text-xs font-bold">Panel Admin</span>
+                <div className={`mt-3 border-t border-slate-100 dark:border-white/10 ${isSidebarCollapsed ? 'pt-3' : 'pt-3 px-3'}`}>
+                    {!isSidebarCollapsed && <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Admin</p>}
+                    <button 
+                        onClick={() => navigate('/app/admin')} 
+                        className={`flex items-center transition-all duration-300 group ${isSidebarCollapsed ? 'justify-center w-12 h-12 rounded-2xl mx-auto hover:bg-red-50' : 'w-full gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50'} ${location.pathname.startsWith('/app/admin') ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/20 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 hover:text-red-500'}`}
+                    >
+                        <ShieldCheck size={20} className={location.pathname.startsWith('/app/admin') ? 'text-red-500' : ''} />
+                        {!isSidebarCollapsed && <span className="text-xs font-bold">Admin Panel</span>}
                     </button>
                 </div>
             )}
         </nav>
       </aside>
 
-      {/* MAIN CONTENT */}
-      <div className="flex flex-col min-h-screen md:pl-[18rem] px-4 md:pr-4 py-4 relative transition-all">
+      {/* ================= MAIN CONTENT WRAPPER ================= */}
+      <div className={`flex flex-col min-h-screen px-4 md:pr-4 py-4 relative transition-all duration-300 ${isSidebarCollapsed ? 'md:pl-28' : 'md:pl-[18rem]'}`}>
         
-        {/* HEADER */}
+        {/* HEADER (FLOATING) */}
         <header className="sticky top-4 z-40 mb-6 mx-auto w-full max-w-6xl">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-white/5 rounded-full px-5 py-2.5 flex items-center justify-between shadow-lg transition-all hover:bg-white/90 dark:hover:bg-slate-900/90 h-[60px]">
                 
+                {/* Mobile Logo */}
                 <div className="md:hidden flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">M</div>
                 </div>
 
+                {/* Search Bar */}
                 <div className="flex-1 flex items-center">
                     {isSearchOpen ? (
-                        <form onSubmit={handleSearch} className="w-full flex items-center gap-2 animate-in fade-in slide-in-from-right duration-300">
-                            <Search size={16} className="text-slate-400 ml-1" />
-                            <input ref={searchInputRef} type="text" placeholder="Cari materi..." className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-sm font-medium" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onBlur={() => !searchQuery && setIsSearchOpen(false)} />
+                        <form onSubmit={handleSearch} className="w-full flex items-center gap-2 animate-in fade-in slide-in-from-right duration-300 pl-2">
+                            <Search size={16} className="text-slate-400 shrink-0" />
+                            <input 
+                                ref={searchInputRef} 
+                                type="text" 
+                                placeholder="Cari materi, soal, atau obat..." 
+                                className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-sm font-medium" 
+                                value={searchQuery} 
+                                onChange={(e) => setSearchQuery(e.target.value)} 
+                                onBlur={() => !searchQuery && setIsSearchOpen(false)} 
+                            />
+                            <button type="submit" className="hidden">Cari</button> 
                             <button type="button" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400"><X size={14}/></button>
                         </form>
                     ) : (
@@ -165,10 +229,10 @@ export default function Layout() {
                     )}
                 </div>
 
+                {/* Header Actions */}
                 <div className="flex items-center gap-2 ml-auto">
                     {!isSearchOpen && <button onClick={() => setIsSearchOpen(true)} className="w-8 h-8 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:scale-105 transition-transform shadow-sm text-slate-500 dark:text-slate-300"><Search size={14} /></button>}
                     
-                    {/* TOGGLE INSIGHT BUTTON */}
                     <button onClick={toggleInsight} className={`w-8 h-8 rounded-full border flex items-center justify-center hover:scale-105 transition-transform shadow-sm ${isInsightActive ? 'bg-amber-100 border-amber-200 text-amber-600 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400'}`}>
                         {(userProfile?.subscriptionStatus === 'free' || !userProfile?.subscriptionStatus) ? <Lock size={12} /> : <Sparkles size={14} fill={isInsightActive ? "currentColor" : "none"} />}
                     </button>
@@ -186,6 +250,7 @@ export default function Layout() {
                             <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-400 to-blue-500 p-[1.5px] cursor-pointer hover:scale-105 transition-transform shadow-md focus:outline-none">
                                 <img src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${userProfile?.name || currentUser?.displayName}&background=random`} alt="Profile" className="w-full h-full rounded-full object-cover border-2 border-white dark:border-slate-900" />
                             </button>
+                            {/* Profile Dropdown */}
                             {isProfileOpen && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
@@ -196,7 +261,7 @@ export default function Layout() {
                                             <span className="mt-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-[9px] font-black rounded border border-indigo-200 dark:border-indigo-800 uppercase tracking-wider">{userProfile?.subscriptionStatus || 'FREE'}</span>
                                         </div>
                                         <div className="p-1.5">
-                                            <button onClick={() => navigate('/app/profile')} className="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center gap-2 transition-colors"><Settings size={14} /> Pengaturan Akun</button>
+                                            <button onClick={() => {navigate('/app/profile'); setIsProfileOpen(false);}} className="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center gap-2 transition-colors"><Settings size={14} /> Pengaturan Akun</button>
                                             <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl flex items-center gap-2 transition-colors"><LogOut size={14} /> Keluar Aplikasi</button>
                                         </div>
                                     </div>
@@ -208,17 +273,29 @@ export default function Layout() {
             </div>
         </header>
 
-        {/* MENGIRIM CONTEXT KE HALAMAN */}
+        {/* PASS CONTEXT TO PAGES */}
         <main className="flex-1 w-full max-w-6xl mx-auto pb-24 md:pb-0">
             <Outlet context={{ isInsightActive }} />
         </main>
       </div>
 
-      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl z-50 px-6 py-3 flex justify-between items-center ring-1 ring-white/20">
-          {navItems.slice(0, 5).map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
-              return (<button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${isActive ? 'text-blue-600 dark:text-teal-400 scale-105 -translate-y-0.5' : 'text-slate-400 hover:text-slate-600'}`}><item.icon size={isActive ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />{isActive && <span className="w-1 h-1 rounded-full bg-current mt-0.5 shadow-[0_0_10px_currentColor]"></span>}</button>)
-          })}
+      {/* ================= MOBILE NAVIGATION (FIXED BOTTOM iOS STYLE) ================= */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 z-50 pb-safe">
+          <div className="flex justify-around items-center h-16 px-2">
+              {navItems.slice(0, 5).map((item) => {
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                      <button 
+                        key={item.path} 
+                        onClick={() => navigate(item.path)} 
+                        className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 active:scale-90 ${isActive ? 'text-blue-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+                      >
+                          <item.icon size={isActive ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />
+                          <span className="text-[9px] font-bold tracking-wide">{item.label.split(' ')[0]}</span>
+                      </button>
+                  )
+              })}
+          </div>
       </nav>
     </div>
   );

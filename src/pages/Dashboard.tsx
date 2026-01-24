@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   GraduationCap, Target, Clock, ArrowRight, 
-  Activity, PlayCircle, Stethoscope, Crown, Star, X
+  Activity, PlayCircle, Stethoscope, Crown, Star, X,
+  Brain
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore'; 
@@ -14,6 +15,7 @@ export default function Dashboard() {
   
   const [showOffer, setShowOffer] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [quote, setQuote] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,6 +29,21 @@ export default function Dashboard() {
     };
     fetchProfile();
   }, [currentUser]);
+
+  // 2. EFEK: RANDOM QUOTE (Baru)
+  useEffect(() => {
+    const quotes = [
+      "Di mana seni pengobatan dicintai, di sana ada cinta pada kemanusiaan.",
+      "Lelahmu hari ini adalah senyum kesembuhan pasienmu di masa depan.",
+      "Belajarlah seolah nyawa orang tercintamu bergantung padanya.",
+      "Dokter sejati tidak hanya mengobati penyakit, tapi merawat manusia.",
+      "Setiap soal yang tuntas adalah satu langkah menuju kompetensi.",
+      "Hari ini berjuang di meja belajar, esok mengabdi di ruang praktik."
+    ];
+    // Pilih acak saat komponen dimuat pertama kali
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setQuote(randomQuote);
+  }, []); // Cukup [] karena tidak tergantung user
 
   useEffect(() => {
       if (userProfile && userProfile.subscriptionStatus === 'free') {
@@ -98,7 +115,7 @@ export default function Dashboard() {
           <div className="relative z-10 max-w-xl">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase mb-4 border border-white/10"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span> Medical OS v1.0</div>
               <h1 className="text-3xl md:text-4xl font-black leading-tight mb-4">Halo, dr. {userProfile?.name?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'Sejawat'} <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-400">Siap Lulus UKMPPD?</span></h1>
-              <p className="text-sm text-slate-300 mb-6 font-light italic opacity-90 max-w-md">"Barangsiapa menempuh jalan untuk menuntut ilmu, Allah akan mudahkan jalannya menuju Surga."</p>
+              <p className="text-sm text-slate-300 mb-6 font-light italic opacity-90 max-w-md">"{quote}"</p>
               <div className="flex flex-wrap gap-3">
                   <button onClick={() => navigate('/app/cbt')} className="bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2 shadow-lg text-sm"><PlayCircle size={18} /> Mulai Latihan</button>
                   <button onClick={() => navigate('/app/flashcards')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition-all text-sm">Buka Flashcards</button>
@@ -116,9 +133,9 @@ export default function Dashboard() {
           <div onClick={() => navigate('/app/cbt')} className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] hover:border-indigo-500/50 transition-all relative overflow-hidden">
               <div className="absolute right-0 top-0 p-16 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
               <div className="relative z-10">
-                  <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><GraduationCap size={24} /></div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Bank Soal UKMPPD</h3>
-                  <p className="text-xs text-slate-500 mb-4">Ribuan soal terupdate per sistem.</p>
+                  <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><Brain size={24} /></div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">CBT Center</h3>
+                  <p className="text-xs text-slate-500 mb-4">Ratusan kasus dan soal terupdate per sistem.</p>
                   <span className="flex items-center gap-2 font-bold text-indigo-600 text-xs group-hover:gap-3 transition-all">Akses Sekarang <ArrowRight size={14} /></span>
               </div>
           </div>
@@ -127,7 +144,7 @@ export default function Dashboard() {
               <div className="relative z-10">
                   <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 text-teal-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><Stethoscope size={24} /></div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">OSCE Center</h3>
-                  <p className="text-xs text-slate-500 mb-4">Checklist & Video panduan klinis.</p>
+                  <p className="text-xs text-slate-500 mb-4">Checklist dan kasus OSCE UKMPPD.</p>
                   <span className="flex items-center gap-2 font-bold text-teal-600 text-xs group-hover:gap-3 transition-all">Pelajari Skill <ArrowRight size={14} /></span>
               </div>
           </div>
