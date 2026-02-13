@@ -179,7 +179,7 @@ export default function MaterialViewer() {
           <div className="flex items-center gap-3">
               <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors shadow-sm"><ArrowLeft size={18} className="text-slate-600 dark:text-slate-300" /></button>
               <div>
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><BookOpen size={12} /> Materi High-Yield</div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><BookOpen size={12} /> Materi Esensial</div>
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none">{system || 'Memuat...'}</h1>
               </div>
           </div>

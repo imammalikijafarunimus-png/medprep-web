@@ -294,8 +294,8 @@ export default function AdminDashboard() {
                  <LayoutDashboard size={32} />
              </div>
              <div>
-                 <h1 className="text-3xl font-black text-white mb-1">Admin Panel v2.0</h1>
-                 <p className="text-slate-400">Pusat Kontrol MedPrep OS (Updated with SKDI Support).</p>
+                 <h1 className="text-3xl font-black text-white mb-1">Admin Panel</h1>
+                 <p className="text-slate-400">Pusat Kontrol MedPrep OS.</p>
              </div>
          </div>
       </div>

@@ -108,7 +108,7 @@ export default function CBTCenter() {
                 <p className="text-slate-400 text-xs md:text-sm max-w-lg leading-snug">
                    {selectedSystem 
                         ? `Akses modul pembelajaran dan bank soal khusus sistem ${selectedSystem}.` 
-                        : 'Pilih sistem organ di bawah ini untuk memulai sesi belajar.'}
+                        : 'Clinical Reasoning Starts Here. Pilih sistem organ di bawah ini untuk memulai sesi belajar.'}
                 </p>
             </div>
             
@@ -156,7 +156,7 @@ export default function CBTCenter() {
                         <BookOpen size={24} />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Pelajari Materi</h3>
-                    <p className="text-slate-500 text-xs mb-6 max-w-xs leading-snug">Akses rangkuman High Yield, Clinical Pearls, dan Guideline.</p>
+                    <p className="text-slate-500 text-xs mb-6 max-w-xs leading-snug">Akses rangkuman Materi Esensial, Clinical Pearls, dan Guideline.</p>
                     <span className="inline-flex items-center gap-2 font-bold text-pink-500 text-xs group-hover:gap-3 transition-all">
                         Buka Materi <ArrowRight size={14} />
                     </span>

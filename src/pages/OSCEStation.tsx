@@ -108,7 +108,7 @@ export default function OSCEStation() {
                     <div className="p-2 bg-teal-500/20 rounded-xl text-teal-400"><Stethoscope size={24} /></div>
                     <h1 className="text-2xl font-black text-white tracking-tight">OSCE Center</h1>
                 </div>
-                <p className="text-slate-400 text-xs md:text-sm max-w-lg leading-snug">Pusat simulasi klinis. Pilih stase untuk akses checklist tindakan & bedah kasus.</p>
+                <p className="text-slate-400 text-xs md:text-sm max-w-lg leading-snug">Repetition Makes Perfection. Pilih stase di bawah ini untuk memulai sesi belajar.</p>
              </div>
           </div>
         </div>

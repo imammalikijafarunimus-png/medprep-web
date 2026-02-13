@@ -53,7 +53,7 @@ export default function Dashboard() {
   }, [userProfile]);
 
   const handleWhatsApp = (plan: string, price: string) => {
-    const adminPhone = "628123456789"; 
+    const adminPhone = "6288980507501"; 
     const univName = userProfile?.university || "Universitas";
     const text = `Halo Admin, saya ${userProfile?.name || currentUser?.displayName} (${univName}).\nSaya tertarik promo *${plan}* seharga *${price}*.\nMohon info pembayaran.`;
     window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');

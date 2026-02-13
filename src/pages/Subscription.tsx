@@ -47,7 +47,7 @@ export default function Subscription() {
         
         <div className="relative z-10 max-w-3xl mx-auto">
            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 text-pink-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md">
-                <Heart size={12} fill="currentColor" /> Amal Jariyah
+                <Heart size={12} fill="currentColor" /> Ongoing Charity
            </div>
            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight">
              Investasi Cerdas <br/>
