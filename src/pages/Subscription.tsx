@@ -32,7 +32,7 @@ export default function Subscription() {
   };
 
   const handleSubscribe = (plan: string, price: string) => {
-    const adminPhone = "628123456789"; // Ganti dengan nomor admin asli
+    const adminPhone = "6288980507501"; // Ganti dengan nomor admin asli
     const text = `Halo Admin MedPrep, saya dokter *${currentUser?.displayName}* (${currentUser?.email}).\nIngin berlangganan paket *${plan}* seharga *Rp ${price}* (${getDurationLabel().replace('/ ', '')}).\n\nMohon info pembayaran. Terima kasih!`;
     window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
