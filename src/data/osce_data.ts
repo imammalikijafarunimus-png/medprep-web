@@ -1,4 +1,6 @@
-// --- 1. DEFINISI LEGO BLOCKS (INTERFACE) ---
+// src/data/osce_data.ts
+
+// --- 1. DEFINISI TYPE & INTERFACE ---
 
 export type OSCECategory = 
   | 'Neurologi' | 'Psikiatri' | 'Indra' | 'Respirasi' | 'Kardiovaskular' 
@@ -6,88 +8,56 @@ export type OSCECategory =
   | 'Endokrin & Metabolisme' | 'Hemato & Imunologi' | 'Muskuloskeletal' 
   | 'Integumen' | 'Kegawatdaruratan';
 
-export interface SectionStandardAnamnesis {
-  type: 'standard_anamnesis';
+// Interface untuk Tipe Alert/Kotak Info (High Yield, Clinical Pearls, dll)
+export type AlertType = 'key-difference' | 'clinical-pearls' | 'high-yield' | 'mnemonic';
+
+export interface ContentBlock {
+  type: 'text' | 'alert';
+  content: string;
+  alertType?: AlertType;
+}
+
+export interface CaseStudy {
+  id: string;
   title: string;
-  data: {
-    keluhan_utama: string;
-    rps: string[];
-    rpd: string[];
-    rpk: string[];
-    kebiasaan?: string[];
-    script?: string;
+  system: string; 
+  level_skdi: string; 
+  frequency: number; // 1-5 Bintang
+  summary: string; 
+  content: {
+    etiologi?: string; // Tambahkan field ini untuk kelengkapan
+    anamnesis: {
+      keluhan_utama: string;
+      list_pertanyaan: string[];
+    };
+    pemeriksaan_fisik: string[];
+    pemeriksaan_penunjang?: string[];
+    diagnosis: {
+      working_diagnosis: string;
+      differential_diagnosis: string[];
+      penunjang: string[];
+      gold_standard: string;
+    };
+    tatalaksana: {
+      farmakologi: string[];
+      non_farmakologi: string[];
+    };
+    osce_tip: string;
   };
 }
 
-export interface SectionPediatricHistory {
-  type: 'pediatric_history';
-  title: string;
-  data: {
-    prenatal: string[];
-    natal: string[];
-    postnatal: string[];
-    nutrisi: string[];
-    script?: string;
-  };
+export interface ChecklistItem {
+  label: string;
+  description?: string;
+  isCritical?: boolean;
+  insight?: string;
+  script?: string;
 }
 
-export interface SectionPsychiatryStatus {
-  type: 'psychiatry_status';
+export interface OSCESection {
+  type: 'checklist'; // Fokus pada checklist untuk simulator
   title: string;
-  data: {
-    penampilan: string[];
-    mood_afek: string[];
-    pembicaraan: string[];
-    persepsi: string[];
-    pikiran: string[];
-    tilikan: string;
-    script?: string;
-  };
-}
-
-export interface SectionChecklist {
-  type: 'checklist';
-  title: string;
-  items: {
-    label: string;
-    description?: string;
-    isCritical?: boolean;
-    insight?: string;
-    script?: string;
-  }[];
-}
-
-export type OSCESection = 
-  | SectionStandardAnamnesis 
-  | SectionPediatricHistory 
-  | SectionPsychiatryStatus 
-  | SectionChecklist;
-
-  export interface CaseStudy {
-   id: string;
-   title: string;
-   system: string; // Misal: Urogenital
-   level_skdi: string; // Misal: 4A, 3B
-   frequency: number; // 1-5 Bintang (Sesuai frekuensi kasus)
-   summary: string; // Deskripsi singkat untuk preview
-   content: {
-     anamnesis: {
-       keluhan_utama: string;
-       list_pertanyaan: string[]; // Poin-poin anamnesis penting
-     };
-     pemeriksaan_fisik: string[]; // Temuan positif (e.g., Nyeri Ketok CVA +)
-     diagnosis: {
-       working_diagnosis: string;
-       differential_diagnosis: string[];
-       penunjang: string[]; // Lab, Radiologi
-       gold_standard: string;
-     };
-     tatalaksana: {
-       farmakologi: string[]; // Isi Resep (R/ ...)
-       non_farmakologi: string[]; // Edukasi
-     };
-     osce_tip: string; // Notes OSCE dari file Word
-   };
+  items: ChecklistItem[];
 }
 
 export interface StationData {
@@ -99,24 +69,7 @@ export interface StationData {
   cases: CaseStudy[];
 }
 
-// --- 2. IMPORT DATA DARI FILE TERPISAH ---
-// Pastikan file-file ini sudah Anda buat di folder src/data/stations/
-import { stationNeurologi } from './stations/neurologi';
-import { stationPsikiatri } from './stations/psikiatri';
-import { stationMata } from './stations/indra_mata';
-import { stationTHT } from './stations/indra_tht';
-import { stationRespirasi } from './stations/respirasi';
-import { stationKardio } from './stations/kardiovaskular';
-import { stationGastro } from './stations/gastro';
-import { stationUrogenital } from './stations/urogenital';
-import { stationReproduksi } from './stations/reproduksi';
-import { stationEndokrin } from './stations/endokrin';
-import { stationHemato } from './stations/hemato';
-import { stationMuskulo } from './stations/muskulo';
-import { stationIntegumen } from './stations/integumen';
-import { stationGadar } from './stations/gadar';
-
-// --- 3. DATA MENU UTAMA ---
+// --- 2. DATA MENU UTAMA ---
 export const SYSTEM_LIST = [
   { id: 'neurologi', label: 'Neurologi', system: 'Saraf', icon: 'brain' },
   { id: 'psikiatri', label: 'Psikiatri', system: 'Jiwa', icon: 'smile' },
@@ -133,9 +86,24 @@ export const SYSTEM_LIST = [
   { id: 'gadar', label: 'Kegawatdaruratan', system: 'Emergency', icon: 'siren' },
 ];
 
+// --- 3. IMPORT DATA STASIUN (PASTIKAN FILE INI ADA) ---
+import { stationNeurologi } from './stations/neurologi';
+import { stationPsikiatri } from './stations/psikiatri';
+import { stationMata } from './stations/indra_mata';
+import { stationTHT } from './stations/indra_tht';
+import { stationRespirasi } from './stations/respirasi';
+import { stationKardio } from './stations/kardiovaskular';
+import { stationGastro } from './stations/gastro';
+import { stationUrogenital } from './stations/urogenital';
+import { stationReproduksi } from './stations/reproduksi';
+import { stationEndokrin } from './stations/endokrin';
+import { stationHemato } from './stations/hemato';
+import { stationMuskulo } from './stations/muskulo';
+import { stationIntegumen } from './stations/integumen';
+import { stationGadar } from './stations/gadar';
+
 // --- 4. EXPORT DATA GABUNGAN ---
 export const STATION_DATA: Record<string, StationData> = {
-  // ... (Stase sebelumnya biarkan sama) ...
   neurologi: stationNeurologi,
   psikiatri: stationPsikiatri,
   indra: {
@@ -146,7 +114,7 @@ export const STATION_DATA: Record<string, StationData> = {
     sections: [
         ...stationMata.sections.map(s => ({...s, title: `[MATA] ${s.title}`})), 
         ...stationTHT.sections.map(s => ({...s, title: `[THT] ${s.title}`}))
-    ] as any, // Cast any sementara agar aman
+    ] as any, 
     cases: [ ...stationMata.cases, ...stationTHT.cases ]
   },
   respirasi: stationRespirasi,
