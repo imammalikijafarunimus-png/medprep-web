@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { 
   onAuthStateChanged, 
   User as FirebaseUser, 
+  UserCredential, // Import ini
   GoogleAuthProvider, 
   signInWithPopup,
   signOut,
@@ -13,7 +14,6 @@ import {
 import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase'; 
 
-// Interface untuk Stats User
 export interface UserStats {
   totalAnswered: number;
   totalCorrect: number;
@@ -37,7 +37,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>; // Diperbaiki: Promise<void>
+  login: (email: string, password: string) => Promise<UserCredential>; // DIPERBAIKI: Kembalikan UserCredential
   updateUserProfile: (name: string) => Promise<void>;
   updateGlobalStats: (systemId: string, isCorrect: boolean) => Promise<void>;
 }
@@ -125,7 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: name,
             email: email,
             subscriptionStatus: 'free',
-            // PERBAIKAN 1: Menambahkan lastAnsweredAt: null
             stats: { totalAnswered: 0, totalCorrect: 0, streak: 0, systemProgress: {}, lastAnsweredAt: null }
         });
         setCurrentUser({
@@ -139,9 +138,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // PERBAIKAN 2: Menambahkan 'async' dan menghapus return value agar cocok dengan Promise<void>
+  // DIPERBAIKI: Mengembalikan hasil signIn agar halaman Login bisa membaca result.user
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    return await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = () => signOut(auth);
