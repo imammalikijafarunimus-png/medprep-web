@@ -1,10 +1,9 @@
-// src/pages/Dashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   GraduationCap, Target, Clock, ArrowRight, 
   Activity, PlayCircle, Stethoscope, Crown, Star, X,
-  Brain, Trophy, Flame
+  Brain, Trophy, Flame, Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
@@ -55,14 +54,6 @@ export default function Dashboard() {
       }
   }, [userProfile]);
 
-  const handleWhatsApp = (plan: string, price: string) => {
-    const adminPhone = "6285786456321"; 
-    const univName = userProfile?.university || "Universitas";
-    const text = `Halo Admin, saya ${userProfile?.name || currentUser?.displayName} (${univName}).\nTertarik promo *${plan}* (${price}).`;
-    window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
-    setShowOffer(false);
-  };
-
   // REALTIME STATS FROM CONTEXT
   const stats = currentUser?.stats;
   const accuracy = stats && stats.totalAnswered > 0 ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
@@ -70,17 +61,62 @@ export default function Dashboard() {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
       
-      {/* Smart Offer Modal */}
+      {/* Compact Offer Modal */}
       {showOffer && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] p-8 relative shadow-2xl border border-slate-200">
-                  <button onClick={() => setShowOffer(false)} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500"><X size={20} /></button>
-                  <div className="text-center">
-                     <Crown size={48} className="text-amber-500 mx-auto mb-4" />
-                     <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Upgrade ke Pro</h2>
-                     <p className="text-slate-500 text-sm mb-6">Buka akses penuh semua fitur premium.</p>
-                     <button onClick={() => handleWhatsApp('PRO', 'Rp 99.000')} className="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl">Ambil Penawaran</button>
+              {/* Ukuran max-w-sm agar tidak terlalu lebar, m-4 agar tidak mentok di pinggir */}
+              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-5 relative shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-300">
+                  
+                  {/* Close Button - Posisi pasti di kanan atas */}
+                  <button onClick={() => setShowOffer(false)} className="absolute top-3 right-3 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-red-500 transition-colors z-10">
+                      <X size={16} />
+                  </button>
+                  
+                  {/* Header Section - Lebih Ringkas */}
+                  <div className="text-center mb-4 pr-6">
+                     <div className="w-12 h-12 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md">
+                        <Sparkles size={24} className="text-white" />
+                     </div>
+                     <h2 className="text-lg font-black text-slate-900 dark:text-white">Level Up Yuk!</h2>
+                     <p className="text-slate-500 text-xs mt-1">Buka akses penuh biar lulus UKMPPD makin mudah.</p>
                   </div>
+
+                  {/* Pricing List - Compact Style */}
+                  <div className="space-y-2 mb-5">
+                      {/* Paket Basic */}
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div className="flex-1">
+                              <h3 className="font-bold text-slate-800 dark:text-white text-sm">Paket Basic</h3>
+                              <p className="text-[10px] text-slate-400">Akses Bank Soal</p>
+                          </div>
+                          <div className="text-right">
+                              <div className="text-[10px] text-slate-400 line-through">Rp 90rb</div>
+                              <div className="text-base font-black text-indigo-600">Rp 45rb</div>
+                          </div>
+                      </div>
+
+                      {/* Paket Expert */}
+                      <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-xl border-2 border-indigo-400 relative">
+                           {/* Best Value Badge */}
+                           <span className="absolute -top-2 right-2 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BEST</span>
+                           <div className="flex-1">
+                               <h3 className="font-bold text-slate-800 dark:text-white text-sm">Paket Expert</h3>
+                               <p className="text-[10px] text-slate-400">Full Access + OSCE</p>
+                           </div>
+                           <div className="text-right">
+                               <div className="text-[10px] text-slate-400 line-through">Rp 150rb</div>
+                               <div className="text-base font-black text-indigo-600">Rp 75rb</div>
+                           </div>
+                      </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <button 
+                    onClick={() => { navigate('/app/subscription'); setShowOffer(false); }} 
+                    className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                      Lihat Penawaran <ArrowRight size={16} />
+                  </button>
               </div>
           </div>
       )}
