@@ -1,5 +1,5 @@
-// src/components/OSCEStation.tsx
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Brain, Droplet, Wind, Heart, Utensils, Baby, Zap, Shield, 
   Activity, Sun, Smile, Eye, CheckCircle, ChevronRight, Mic, 
@@ -44,7 +44,10 @@ export default function OSCEStation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [scriptMode, setScriptMode] = useState(true);
   const [completedCases, setCompletedCases] = useLocalStorageState('medprep_osce_completed_cases', []);
-  const [checkedItems, setCheckedItems] = useState<string[]>([]); 
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
+  
+  // --- NAVIGASI TRENDS ANALYSIS ---
+  const navigate = useNavigate();
 
   // --- AUTH CONTEXT ---
   const { currentUser } = useAuth(); // Ambil data user yang login
@@ -274,13 +277,19 @@ export default function OSCEStation() {
           </div>
         </div>
 
+        {/* QUICK ACCESS TOOLS / RESOURCE TAMBAHAN */}
         <div className="grid md:grid-cols-3 gap-4">
            {[
-             { icon: BarChart2, title: "Analisis Tren", desc: "Statistik kasus 10 tahun terakhir", color: 'indigo' },
-             { icon: FolderOpen, title: "Rekap Batch", desc: "Kasus sering muncul UKMPPD", color: 'slate' },
-             { icon: Award, title: "Leaderboard", desc: "Top performer minggu ini", color: 'amber' }
+             // Tambahkan properti 'path' untuk navigasi
+             { icon: BarChart2, title: "Analisis Tren", desc: "Statistik kasus 10 tahun terakhir", color: 'indigo', path: '/app/trends' },
+             { icon: FolderOpen, title: "Rekap Batch", desc: "Kasus sering muncul UKMPPD", color: 'slate', path: '#' }, // Belum ada halaman
+             { icon: Award, title: "Leaderboard", desc: "Top performer minggu ini", color: 'amber', path: '#' } // Belum ada halaman
            ].map((item, i) => (
-             <div key={i} className="group bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:border-indigo-500/50 hover:shadow-lg cursor-pointer transition-all">
+             <div 
+                key={i} 
+                onClick={() => item.path !== '#' && navigate(item.path)} // Hanya navigasi jika path bukan '#'
+                className="group bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:border-indigo-500/50 hover:shadow-lg cursor-pointer transition-all"
+              >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-${item.color}-50 dark:bg-${item.color}-900/10 text-${item.color}-600`}>
                    <item.icon size={24} />
                 </div>

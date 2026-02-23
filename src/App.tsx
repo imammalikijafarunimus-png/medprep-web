@@ -25,6 +25,7 @@ import FlashcardDrill from './pages/FlashcardDrill';
 import UserProfile from './pages/Profile';
 import AdminDashboard from './pages/AdminPanel';
 import Subscription from './pages/Subscription';
+import TrendAnalysis from './pages/TrendAnalysis';
 
 function App() {
   return (
@@ -62,6 +63,9 @@ function App() {
                 
                 {/* Subscription Routes */}
                 <Route path="subscription" element={<Subscription />} />
+
+                {/* TrendAnalysis Routes */}
+                <Route path="/app/trends" element={<TrendAnalysis />} />
 
               </Route>
 
