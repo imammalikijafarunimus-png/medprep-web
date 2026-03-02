@@ -1,13 +1,20 @@
-// src/utils/device.ts
+// src/lib/device.ts
 export const getDeviceId = (): string => {
-    const STORAGE_KEY = 'medprep_device_id';
-    let deviceId = localStorage.getItem(STORAGE_KEY);
-    
-    if (!deviceId) {
-      // Generate ID acak sederhana jika belum ada
-      deviceId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-      localStorage.setItem(STORAGE_KEY, deviceId);
-    }
-    
-    return deviceId;
-  };
+  let deviceId = localStorage.getItem('medprep_device_id');
+
+  if (!deviceId) {
+    // Fingerprint sederhana tapi sangat unik
+    const fingerprint = [
+      navigator.userAgent,
+      screen.width,
+      screen.height,
+      navigator.platform,
+      new Date().getTimezoneOffset()
+    ].join('|');
+
+    deviceId = btoa(fingerprint).slice(0, 32);
+    localStorage.setItem('medprep_device_id', deviceId);
+  }
+
+  return deviceId;
+};

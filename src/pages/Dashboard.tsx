@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { getRecommendedPackage } from '../data/universities';
 
 // Array Kata-Kata Motivasi
 const motivationalQuotes = [
@@ -58,68 +59,82 @@ export default function Dashboard() {
   const stats = currentUser?.stats;
   const accuracy = stats && stats.totalAnswered > 0 ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
 
+  const recommended = getRecommendedPackage(currentUser?.university);
+
+  // === LOGIKA POPUP: HANYA MUNcul UNTUK FREE ===
+  useEffect(() => {
+    if (currentUser?.subscriptionStatus === 'free') {
+      const timer = setTimeout(() => setShowOffer(true), 1400);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser]);
+
+  const handleWhatsApp = () => {
+    const adminPhone = "6285786456321";
+    const text = `Halo Admin, saya ${currentUser?.displayName} dari ${currentUser?.university || 'Universitas Saya'}.\nMau ambil paket *${recommended.name}* (${recommended.price}).`;
+    window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    setShowOffer(false);
+  };
+
+  const goToPricing = () => {
+    navigate('/app/subscription');
+    setShowOffer(false);
+  };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative pb-10">
       
-      {/* Compact Offer Modal */}
-      {showOffer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              {/* Ukuran max-w-sm agar tidak terlalu lebar, m-4 agar tidak mentok di pinggir */}
-              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-5 relative shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-300">
-                  
-                  {/* Close Button - Posisi pasti di kanan atas */}
-                  <button onClick={() => setShowOffer(false)} className="absolute top-3 right-3 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-red-500 transition-colors z-10">
-                      <X size={16} />
-                  </button>
-                  
-                  {/* Header Section - Lebih Ringkas */}
-                  <div className="text-center mb-4 pr-6">
-                     <div className="w-12 h-12 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md">
-                        <Sparkles size={24} className="text-white" />
-                     </div>
-                     <h2 className="text-lg font-black text-slate-900 dark:text-white">Level Up Yuk!</h2>
-                     <p className="text-slate-500 text-xs mt-1">Buka akses penuh biar lulus UKMPPD makin mudah.</p>
-                  </div>
+      {/* ==================== POPUP UPGRADE (UKURAN DIPERBAIKI) ==================== */}
+{showOffer && (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl">
+    <div className="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700">
+      
+      {/* Gradient header tipis */}
+      <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-teal-500 to-amber-500" />
+      
+      <div className="p-6 text-center">
+        <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mb-5 shadow-xl">
+          <Crown size={32} className="text-white" />
+        </div>
 
-                  {/* Pricing List - Compact Style */}
-                  <div className="space-y-2 mb-5">
-                      {/* Paket Basic */}
-                      <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                          <div className="flex-1">
-                              <h3 className="font-bold text-slate-800 dark:text-white text-sm">Paket Basic</h3>
-                              <p className="text-[10px] text-slate-400">Akses Bank Soal</p>
-                          </div>
-                          <div className="text-right">
-                              <div className="text-[10px] text-slate-400 line-through">Rp 90rb</div>
-                              <div className="text-base font-black text-indigo-600">Rp 45rb</div>
-                          </div>
-                      </div>
+        <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full text-xs font-bold mb-3">
+          Rekomendasi untuk {currentUser?.university || 'Kampus Anda'}
+        </div>
 
-                      {/* Paket Expert */}
-                      <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-xl border-2 border-indigo-400 relative">
-                           {/* Best Value Badge */}
-                           <span className="absolute -top-2 right-2 bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">BEST</span>
-                           <div className="flex-1">
-                               <h3 className="font-bold text-slate-800 dark:text-white text-sm">Paket Expert</h3>
-                               <p className="text-[10px] text-slate-400">Full Access + OSCE</p>
-                           </div>
-                           <div className="text-right">
-                               <div className="text-[10px] text-slate-400 line-through">Rp 150rb</div>
-                               <div className="text-base font-black text-indigo-600">Rp 75rb</div>
-                           </div>
-                      </div>
-                  </div>
+        <h2 className="text-xl font-black mb-1">{recommended.name}</h2>
+        <p className="text-slate-500 text-sm mb-5 leading-tight">{recommended.desc}</p>
 
-                  {/* CTA Button */}
-                  <button 
-                    onClick={() => { navigate('/app/subscription'); setShowOffer(false); }} 
-                    className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors text-sm flex items-center justify-center gap-2"
-                  >
-                      Lihat Penawaran <ArrowRight size={16} />
-                  </button>
-              </div>
-          </div>
-      )}
+        <div className="mb-7">
+          <span className="text-4xl font-black text-teal-600">Rp {recommended.price}</span>
+          <span className="text-xs text-slate-400 block mt-1">/ 6 bulan (paling populer)</span>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={handleWhatsApp}
+            className="w-full py-3.5 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg text-sm"
+          >
+            Ambil Penawaran Sekarang <ArrowRight size={17} />
+          </button>
+
+          <button
+            onClick={goToPricing}
+            className="w-full py-3.5 border-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold rounded-2xl transition-all active:scale-[0.98] text-sm"
+          >
+            Lihat Semua Paket
+          </button>
+        </div>
+
+        <button 
+          onClick={() => setShowOffer(false)}
+          className="mt-5 text-xs text-slate-400 hover:text-slate-500 transition-colors"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* HERO SECTION */}
       <div className="relative rounded-[2.5rem] bg-slate-900 dark:bg-black overflow-hidden p-8 md:p-12 mb-8 text-white shadow-2xl shadow-indigo-500/20">

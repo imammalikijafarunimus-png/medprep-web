@@ -2,83 +2,98 @@ import React, { useState } from 'react';
 import { 
   Check, X, Star, Shield, Crown, Heart, 
   Zap, ArrowRight, School, Building2,
-  Clock, BookOpenCheck, Award, ChevronRight
+  Clock, BookOpenCheck, Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getRecommendedPackage } from '../data/universities';
 
 export default function Subscription() {
   const { currentUser } = useAuth();
   
-  // STATE PRICING (SYNC WITH LANDING PAGE)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'midyear' | 'lifetime'>('midyear');
+
+  const currentPlan = currentUser?.subscriptionStatus || 'free';
+  const recommended = getRecommendedPackage(currentUser?.university);
+
+  const isRecommendedBasic = recommended.name.toLowerCase().includes('basic');
+  const isRecommendedExpert = recommended.name.toLowerCase().includes('expert');
 
   // LOGIC HARGA
   const getPrice = (plan: 'basic' | 'expert') => {
-      if (plan === 'basic') {
-          if (billingCycle === 'monthly') return '15.000';
-          if (billingCycle === 'midyear') return '45.000';
-          return '99.000';
-      } else {
-          if (billingCycle === 'monthly') return '25.000';
-          if (billingCycle === 'midyear') return '75.000';
-          return '149.000';
-      }
+    if (plan === 'basic') {
+      if (billingCycle === 'monthly') return '15.000';
+      if (billingCycle === 'midyear') return '45.000';
+      return '99.000';
+    } else {
+      if (billingCycle === 'monthly') return '25.000';
+      if (billingCycle === 'midyear') return '75.000';
+      return '149.000';
+    }
   };
 
   const getDurationLabel = () => {
-      if (billingCycle === 'monthly') return '/ bulan';
-      if (billingCycle === 'midyear') return '/ 6 bulan';
-      return '/ selamanya';
+    if (billingCycle === 'monthly') return '/ bulan';
+    if (billingCycle === 'midyear') return '/ 6 bulan';
+    return '/ selamanya';
   };
 
   const handleSubscribe = (plan: string, price: string) => {
-    const adminPhone = "6288980507501"; // Ganti dengan nomor admin asli
-    const text = `Halo Admin MedPrep, saya dokter *${currentUser?.displayName}* (${currentUser?.email}).\nIngin berlangganan paket *${plan}* seharga *Rp ${price}* (${getDurationLabel().replace('/ ', '')}).\n\nMohon info pembayaran. Terima kasih!`;
+    const adminPhone = "6285786456321";
+    const text = `Halo Admin MedPrep, saya *${currentUser?.displayName}* (${currentUser?.email}).\nIngin berlangganan paket *${plan}* seharga *Rp ${price}* (${billingCycle}).\n\nMohon info pembayaran. Terima kasih!`;
     window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
     <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 max-w-7xl mx-auto px-4 md:px-6">
       
+      {/* STATUS SUDAH BERLANGGANAN */}
+      {currentPlan !== 'free' && (
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 text-center">
+          <p className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-2">
+            ✅ Kamu sudah berlangganan <span className="uppercase font-black">{currentPlan}</span>
+          </p>
+        </div>
+      )}
+
       {/* HEADER HERO */}
-      <div className="relative bg-slate-900 dark:bg-black rounded-[2.5rem] p-10 md:p-14 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none text-center border border-slate-800">
+      <div className="relative bg-slate-900 dark:bg-black rounded-[2.5rem] p-10 md:p-14 overflow-hidden shadow-2xl text-center border border-slate-800">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px]"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px]"></div>
         
         <div className="relative z-10 max-w-3xl mx-auto">
-           <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 text-pink-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md">
-                <Heart size={12} fill="currentColor" /> Ongoing Charity
-           </div>
-           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight">
-             Investasi Cerdas <br/>
-             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-indigo-400">Masa Depan Sejawat</span>
-           </h1>
-           <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8">
-             <span className="text-white font-bold">30% biaya langganan</span> didonasikan untuk kegiatan sosial. Pilih paket sesuai target kelulusanmu.
-           </p>
+          <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 text-pink-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+            <Heart size={12} fill="currentColor" /> Amal Jariyah
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight">
+            Investasi Cerdas <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-indigo-400">Masa Depan Sejawat</span>
+          </h1>
+          <p className="text-slate-400 text-base md:text-lg leading-relaxed mb-8">
+            <span className="text-white font-bold">30% biaya langganan</span> didonasikan untuk kegiatan sosial.
+          </p>
 
-           {/* PRICING TOGGLE */}
-           <div className="inline-flex bg-slate-800/50 backdrop-blur border border-slate-700 p-1 rounded-full">
-              {(['monthly', 'midyear', 'lifetime'] as const).map((cycle) => (
-                  <button 
-                    key={cycle}
-                    onClick={() => setBillingCycle(cycle)}
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingCycle === cycle 
-                        ? 'bg-white text-slate-900 shadow-lg' 
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                      {cycle === 'monthly' ? 'Bulanan' : cycle === 'midyear' ? '6 Bulan' : 'Selamanya'}
-                  </button>
-              ))}
-           </div>
+          {/* PRICING TOGGLE */}
+          <div className="inline-flex bg-slate-800/50 backdrop-blur border border-slate-700 p-1 rounded-full">
+            {(['monthly', 'midyear', 'lifetime'] as const).map((cycle) => (
+              <button 
+                key={cycle}
+                onClick={() => setBillingCycle(cycle)}
+                className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingCycle === cycle 
+                  ? 'bg-white text-slate-900 shadow-lg' 
+                  : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {cycle === 'monthly' ? 'Bulanan' : cycle === 'midyear' ? '6 Bulan' : 'Selamanya'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* PRICING GRID */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start pt-4">
         
-        {/* 1. FREE TIER */}
+        {/* FREE TIER */}
         <div className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] hover:shadow-xl transition-all duration-300 opacity-80 hover:opacity-100 mt-2">
             <div className="mb-6">
                 <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-4">
@@ -116,17 +131,14 @@ export default function Subscription() {
             </div>
         </div>
 
-        {/* 2. BASIC TIER */}
-        <div className="relative group z-10 hover:-translate-y-2 transition-transform duration-300">
-            {/* BADGE */}
-            <div className="absolute inset-x-0 -top-4 flex justify-center z-20">
-                <span className="bg-blue-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-2 ring-4 ring-slate-50 dark:ring-slate-950">
-                    <School size={12} /> Rekomendasi Mhs PTN
-                </span>
+        {/* BASIC TIER */}
+        <div className={`relative group z-10 hover:-translate-y-2 transition-transform duration-300 ${isRecommendedBasic ? 'ring-4 ring-blue-500/30' : ''}`}>
+          {isRecommendedBasic && (
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold px-5 py-1 rounded-full shadow-lg">
+              ⭐ Rekomendasi Kampusmu
             </div>
-
-            {/* CARD CONTENT */}
-            <div className="bg-white dark:bg-slate-900 border-2 border-blue-500/20 dark:border-blue-500/30 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-500/10 h-full">
+          )}
+          <div className="bg-white dark:bg-slate-900 border-2 border-blue-500/20 p-8 rounded-[2.5rem] shadow-2xl h-full">
                 <div className="mb-6 mt-2">
                     <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
                         <Star size={24} fill="currentColor" />
@@ -141,11 +153,16 @@ export default function Subscription() {
                 </div>
 
                 <button 
-                    onClick={() => handleSubscribe('BASIC', getPrice('basic'))}
-                    className="w-full py-4 rounded-2xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all mb-8 flex items-center justify-center gap-2"
-                >
-                    Pilih Basic <ArrowRight size={16} />
-                </button>
+              onClick={() => handleSubscribe('BASIC', getPrice('basic'))}
+              disabled={currentPlan === 'basic'}
+              className={`w-full py-4 rounded-2xl font-bold transition-all mb-8 flex items-center justify-center gap-2 ${
+                currentPlan === 'basic' 
+                  ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {currentPlan === 'basic' ? '✅ Paket Saat Ini' : 'Pilih Basic'}
+            </button>
 
                 <div className="space-y-4">
                     <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Fitur Unggulan</p>
@@ -167,17 +184,14 @@ export default function Subscription() {
             </div>
         </div>
 
-        {/* 3. EXPERT TIER */}
-        <div className="relative group z-10 hover:-translate-y-2 transition-transform duration-300">
-            {/* BADGE */}
-            <div className="absolute inset-x-0 -top-4 flex justify-center z-20">
-                <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-2 ring-4 ring-slate-50 dark:ring-slate-950">
-                    <Building2 size={12} /> Rekomendasi PTS / PTM
-                </span>
+        {/* EXPERT TIER */}
+        <div className={`relative group z-10 hover:-translate-y-2 transition-transform duration-300 ${isRecommendedExpert ? 'ring-4 ring-amber-500/30' : ''}`}>
+          {isRecommendedExpert && (
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-5 py-1 rounded-full shadow-lg">
+              ⭐ Rekomendasi Kampusmu
             </div>
-
-            {/* CARD CONTENT */}
-            <div className="relative bg-slate-900 dark:bg-black border border-amber-500/30 p-8 rounded-[2.5rem] shadow-2xl shadow-amber-500/20 h-full overflow-hidden">
+          )}
+          <div className="bg-slate-900 border border-amber-500/30 p-8 rounded-[2.5rem] shadow-2xl h-full overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
                 
                 <div className="relative z-10">
@@ -195,11 +209,16 @@ export default function Subscription() {
                     </div>
 
                     <button 
-                        onClick={() => handleSubscribe('EXPERT', getPrice('expert'))}
-                        className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:shadow-xl hover:shadow-amber-500/20 transition-all mb-8 flex items-center justify-center gap-2"
-                    >
-                        Upgrade Full Akses <Zap size={16} fill="currentColor" />
-                    </button>
+              onClick={() => handleSubscribe('EXPERT', getPrice('expert'))}
+              disabled={currentPlan === 'expert'}
+              className={`w-full py-4 rounded-2xl font-bold transition-all mb-8 flex items-center justify-center gap-2 ${
+                currentPlan === 'expert' 
+                  ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white'
+              }`}
+            >
+              {currentPlan === 'expert' ? '✅ Paket Saat Ini' : 'Upgrade ke Expert'}
+            </button>
 
                     <div className="space-y-4">
                         <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Semua Fitur Basic, Ditambah:</p>

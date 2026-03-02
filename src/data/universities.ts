@@ -77,3 +77,35 @@ export const PRIVATE_UNIVERSITIES: string[] = [
   "Universitas Muhammadiyah Gresik (UMG)",
   "Lainnya"
 ];
+
+// ==================== HELPER FUNCTIONS (BARU) ====================
+export const isMuhammadiyahUniversity = (universityName: string | undefined): boolean => {
+  if (!universityName) return false;
+  return PTM_UNIVERSITIES.some(ptm => 
+    universityName.toLowerCase().includes(ptm.toLowerCase()) || 
+    ptm.toLowerCase().includes(universityName.toLowerCase())
+  );
+};
+
+export const getUniversitySegment = (universityName: string | undefined): 'muhammadiyah' | 'general' => {
+  return isMuhammadiyahUniversity(universityName) ? 'muhammadiyah' : 'general';
+};
+
+export const getRecommendedPackage = (universityName: string | undefined) => {
+  const isPTM = isMuhammadiyahUniversity(universityName);
+  return isPTM 
+    ? {
+        name: "Muhammadiyah Special Pack",
+        price: "Rp 129.000",
+        badge: "KHUSUS PTM",
+        color: "amber",
+        desc: "Full akses + Insight Islami & Jadwal Sholat"
+      }
+    : {
+        name: "Pro Pack",
+        price: "Rp 99.000",
+        badge: "REKOMENDASI",
+        color: "indigo",
+        desc: "Full akses semua fitur premium"
+      };
+};

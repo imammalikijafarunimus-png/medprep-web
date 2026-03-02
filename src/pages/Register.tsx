@@ -50,32 +50,21 @@ export default function Register() {
   const handleFinish = async () => {
     setIsLoading(true);
     try {
-      const userCredential = await register(formData.email, formData.password, formData.name);
-      const user = userCredential.user;
-
-      // Simpan data lengkap ke Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        name: formData.name,
-        email: formData.email,
-        university: formData.university,
-        segment: formData.segment,
-        subscriptionStatus: 'free', 
-        role: 'student',
-        preferences: {
-          showIslamicInsight: false,
-          showPrayerTimes: formData.segment === 'muhammadiyah' 
-        },
-        // TAMBAHAN: Simpan Session ID
-        lastDeviceId: getDeviceId(), 
-        lastLoginAt: serverTimestamp(),
-        createdAt: serverTimestamp()
-      });
+      await register(
+        formData.email, 
+        formData.password, 
+        formData.name,
+        formData.university,
+        formData.segment
+      );
       
+      // Tidak perlu setDoc lagi (sudah dilakukan di context)
       navigate('/app/dashboard');
+      
     } catch (error: any) {
       console.error("Register Error:", error);
-      alert("Gagal mendaftar: " + error.message);
-      setCurrentStep(1);
+      alert("Gagal mendaftar: " + (error.message || "Coba lagi nanti"));
+      setCurrentStep(1); // kembali ke step 1
     } finally {
       setIsLoading(false);
     }

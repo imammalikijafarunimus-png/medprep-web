@@ -26,19 +26,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // 1. Lakukan Login Auth
-      const userCredential = await login(formData.email, formData.password);
-      const user = userCredential.user;
-
-      // 2. TAMBAHAN: Update Device ID di Firestore
-      // Ini yang akan menendang device lama
-      await updateDoc(doc(db, "users", user.uid), {
-          lastDeviceId: getDeviceId(),
-          lastLoginAt: serverTimestamp()
-      });
-
-      navigate('/app/dashboard');
-    } catch (err: any) {
+      await login(formData.email.trim(), formData.password);
+    navigate('/app/dashboard');
+  } catch (err: any) {
+    console.error("Login Error:", err.code, err.message);
       let msg = "Gagal masuk. Periksa kembali email dan password Anda.";
       if (err.code === 'auth/user-not-found') msg = "Akun tidak ditemukan. Silakan daftar dulu.";
       if (err.code === 'auth/wrong-password') msg = "Password salah.";
