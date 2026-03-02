@@ -5,7 +5,7 @@ import {
   ChevronRight, AlertCircle, FileText, Activity 
 } from 'lucide-react';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import { FLASHCARDS } from '../data/flashcard_data'; // Pastikan path benar
 import { STATION_DATA } from '../data/osce_data';   // Pastikan path benar
 
@@ -64,46 +64,46 @@ export default function SearchPage() {
             });
         });
 
-        // 3. CARI DI MATERI (Firebase)
-        // Catatan: Firestore tidak support "contains" query secara native dan murah.
-        // Strategi: Ambil dokumen (bisa dibatasi limit) lalu filter manual di client.
-        const materialRef = collection(db, "cbt_materials");
-        const materialSnapshot = await getDocs(query(materialRef, limit(100))); // Limit agar tidak berat
-        
-        materialSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            const topic = data.topic || data.title || '';
-            const content = data.content || '';
-            
-            if (topic.toLowerCase().includes(queryText) || content.toLowerCase().includes(queryText)) {
-                combinedResults.push({
-                    id: doc.id,
-                    type: 'material' as const,
-                    title: topic,
-                    subtitle: content.substring(0, 60).replace(/[#*]/g, '') + '...', // Bersihkan markdown dikit
-                    link: `/app/cbt/read?system=${encodeURIComponent(data.system)}`
-                });
-            }
-        });
+        // 3. CARI DI MATERI (Firebase) - Check if initialized
+        if (isFirebaseInitialized() && db) {
+          const materialRef = collection(db, "cbt_materials");
+          const materialSnapshot = await getDocs(query(materialRef, limit(100))); // Limit agar tidak berat
+          
+          materialSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              const topic = data.topic || data.title || '';
+              const content = data.content || '';
+              
+              if (topic.toLowerCase().includes(queryText) || content.toLowerCase().includes(queryText)) {
+                  combinedResults.push({
+                      id: doc.id,
+                      type: 'material' as const,
+                      title: topic,
+                      subtitle: content.substring(0, 60).replace(/[#*]/g, '') + '...', // Bersihkan markdown dikit
+                      link: `/app/cbt/read?system=${encodeURIComponent(data.system)}`
+                  });
+              }
+          });
 
-        // 4. CARI DI SOAL CBT (Firebase)
-        const questionRef = collection(db, "cbt_questions");
-        const questionSnapshot = await getDocs(query(questionRef, limit(50))); // Limit 50 soal sampel
-        
-        questionSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            const qText = data.question || '';
-            
-            if (qText.toLowerCase().includes(queryText)) {
-                combinedResults.push({
-                    id: doc.id,
-                    type: 'cbt' as const,
-                    title: `Soal ${data.system}`,
-                    subtitle: qText.substring(0, 60) + '...',
-                    link: `/app/cbt/quiz?system=${encodeURIComponent(data.system)}&mode=random` // Link sementara
-                });
-            }
-        });
+          // 4. CARI DI SOAL CBT (Firebase)
+          const questionRef = collection(db, "cbt_questions");
+          const questionSnapshot = await getDocs(query(questionRef, limit(50))); // Limit 50 soal sampel
+          
+          questionSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              const qText = data.question || '';
+              
+              if (qText.toLowerCase().includes(queryText)) {
+                  combinedResults.push({
+                      id: doc.id,
+                      type: 'cbt' as const,
+                      title: `Soal ${data.system}`,
+                      subtitle: qText.substring(0, 60) + '...',
+                      link: `/app/cbt/quiz?system=${encodeURIComponent(data.system)}&mode=random` // Link sementara
+                  });
+              }
+          });
+        }
 
         setResults(combinedResults);
 

@@ -388,7 +388,9 @@ export default function OSCEStation() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-teal-600 transition-colors">{section.title}</h3>
-                                    <p className="text-xs text-slate-400">{section.items?.length || 0} Langkah</p>
+                                    <p className="text-xs text-slate-400">
+                                      {section.type === 'checklist' ? section.items.length : 0} Langkah
+                                    </p>
                                 </div>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-teal-50 group-hover:text-teal-600 transition-all">

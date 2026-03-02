@@ -39,7 +39,7 @@ const alertConfig = {
   },
 };
 
-export default function MarkdownAlert({ type, children }: MarkdownAlertProps) {
+function MarkdownAlert({ type, children }: MarkdownAlertProps) {
   const config = alertConfig[type] || alertConfig['high-yield'];
   const Icon = config.icon;
 
@@ -64,3 +64,6 @@ export default function MarkdownAlert({ type, children }: MarkdownAlertProps) {
     </div>
   );
 }
+
+export { MarkdownAlert };
+export default MarkdownAlert;

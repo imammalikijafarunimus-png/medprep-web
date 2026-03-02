@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore'; 
-import { db } from '../../lib/firebase'; 
+import { db, isFirebaseInitialized } from '../../lib/firebase'; 
 import toast from 'react-hot-toast';
 
 export default function Layout() {
@@ -33,6 +33,12 @@ export default function Layout() {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // Check if Firebase is initialized and db is not null
+      if (!isFirebaseInitialized() || !db) {
+        console.warn('[Layout] Firebase not initialized');
+        return;
+      }
+      
       if (currentUser?.uid) {
         try {
           const docRef = doc(db, "users", currentUser.uid);

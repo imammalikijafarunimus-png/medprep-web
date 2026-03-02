@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import { getRecommendedPackage } from '../data/universities';
 
 // Array Kata-Kata Motivasi
@@ -32,6 +32,12 @@ export default function Dashboard() {
   // Fetch Profile & Set Random Quote
   useEffect(() => {
     const fetchProfile = async () => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        console.warn('[Dashboard] Firebase not initialized');
+        return;
+      }
+      
       if (currentUser?.uid) {
         try {
           const docRef = doc(db, "users", currentUser.uid);

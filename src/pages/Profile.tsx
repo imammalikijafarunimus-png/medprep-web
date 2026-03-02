@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Mail, School, BookOpen, Edit2, Save, X, Trophy, LogOut } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase'; // Sesuaikan path jika perlu (misal: ../firebase)
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import toast from 'react-hot-toast';
 
 interface UserProfileData {
@@ -29,6 +29,12 @@ export default function UserProfile() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        console.warn('[Profile] Firebase not initialized');
+        return;
+      }
+      
       if (currentUser) {
         setDisplayName(currentUser.displayName || '');
         try {
@@ -47,6 +53,13 @@ export default function UserProfile() {
 
   const handleSave = async () => {
     if (!currentUser) return;
+    
+    // Check Firebase
+    if (!isFirebaseInitialized() || !db) {
+      toast.error("Firebase belum siap. Periksa konfigurasi .env.local");
+      return;
+    }
+    
     setLoading(true);
     const toastId = toast.loading("Menyimpan...");
 

@@ -1,4 +1,3 @@
-// src/components/MaterialViewer.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { 
@@ -6,11 +5,11 @@ import {
   BookOpen, Star, Bookmark, Lock, Info, CheckCircle2, X, Target, Layers
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../context/AuthContext';
 import PremiumLock from '../components/PremiumLock';
-import { AlertType } from '../data/osce_data'; // Import dari file data baru
+import { AlertType, ContentBlock } from '../data/osce_data'; // Import dari file data baru
 
 interface Material {
   id: string;
@@ -80,7 +79,7 @@ export default function MaterialViewer() {
   // --- PARSING LOGIC: MEMISAHKAN ALERT DARI TEKS BIASA ---
   const renderContentWithAlerts = (content: string) => {
     const regex = /:::(key-difference|clinical-pearls|high-yield|mnemonic)\s+([\s\S]*?)\s+:::/g;
-    const parts = [];
+    const parts: ContentBlock[] = [];
     let lastIndex = 0;
     let match;
 
@@ -123,6 +122,14 @@ export default function MaterialViewer() {
   useEffect(() => {
     const fetchMaterials = async () => {
       if (!system) return;
+      
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        console.warn('[CBTReader] Firebase not initialized');
+        setLoading(false);
+        return;
+      }
+      
       try {
         const q = query(collection(db, "cbt_materials"), where("system", "==", system));
         const snapshot = await getDocs(q);

@@ -6,9 +6,10 @@ import {
   Trophy, Activity, Target, Flame
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import { SYSTEM_LIST } from '../data/osce_data'; 
 import { useAuth } from '../context/AuthContext'; // Import Auth
+import toast from 'react-hot-toast';
 
 export default function CBTCenter() {
   const navigate = useNavigate();
@@ -36,6 +37,14 @@ export default function CBTCenter() {
     if (viewMode === 'folder_list' && selectedSystem && latihanCategory) {
         const fetchFolders = async () => {
             setLoading(true);
+            
+            // Check Firebase
+            if (!isFirebaseInitialized() || !db) {
+              toast.error("Firebase belum siap. Periksa konfigurasi .env.local");
+              setLoading(false);
+              return;
+            }
+            
             try {
                 // Query berdasarkan System Label (Pastikan data di Firestore 'system' pakai Label, bukan ID)
                 const q = query(collection(db, "cbt_questions"), where("system", "==", selectedSystem));

@@ -9,7 +9,7 @@ import {
   Star, Shield, XCircle, Filter, X, BadgeCheck
 } from 'lucide-react';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, updateDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import { SYSTEM_LIST } from '../data/osce_data';
 import toast from 'react-hot-toast'; 
 
@@ -111,6 +111,13 @@ export default function AdminDashboard() {
   const handleSimpanSoal = async (e: React.FormEvent) => {
     e.preventDefault(); 
     if (!formSoal.question || !formSoal.options.a) { toast.error("Data tidak lengkap"); return; }
+    
+    // Check Firebase
+    if (!isFirebaseInitialized() || !db) {
+      toast.error("Firebase belum siap. Periksa konfigurasi .env.local");
+      return;
+    }
+    
     setLoading(true); 
     const toastId = toast.loading("Menyimpan Soal...");
     try {
@@ -124,6 +131,13 @@ export default function AdminDashboard() {
   const handleSimpanMateri = async (e: React.FormEvent) => {
       e.preventDefault(); 
       if (!formMateri.title || !formMateri.content) { toast.error("Data tidak lengkap"); return; }
+      
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap. Periksa konfigurasi .env.local");
+        return;
+      }
+      
       setLoading(true); 
       const toastId = toast.loading("Menyimpan Materi...");
       try { 
@@ -135,6 +149,12 @@ export default function AdminDashboard() {
   };
 
   const fetchData = async () => {
+    // Check Firebase
+    if (!isFirebaseInitialized() || !db) {
+      console.warn('[AdminPanel] Firebase not initialized');
+      return;
+    }
+    
     setLoading(true);
     try {
       if (activeSection === 'users') {
@@ -155,6 +175,12 @@ export default function AdminDashboard() {
 
   // CHANGE USER STATUS
   const handleChangeStatus = async (userId: string, newStatus: string) => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap");
+        return;
+      }
+      
       if(confirm(`Ubah status user ini menjadi ${newStatus.toUpperCase()}?`)) {
           try {
               await updateDoc(doc(db, "users", userId), { subscriptionStatus: newStatus });
@@ -167,6 +193,12 @@ export default function AdminDashboard() {
   };
   
   const handleDelete = async (id: string) => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap");
+        return;
+      }
+      
       if(confirm("Yakin ingin menghapus item ini?")) { 
           await deleteDoc(doc(db, activeSection === 'soal' ? "cbt_questions" : "cbt_materials", id)); 
           toast.success("Item dihapus"); 
@@ -175,6 +207,12 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (id: string) => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap");
+        return;
+      }
+      
       if(confirm("Yakin ingin MENGHAPUS user ini permanen?")) { 
           await deleteDoc(doc(db, "users", id)); 
           toast.success("User dihapus"); 
@@ -184,6 +222,12 @@ export default function AdminDashboard() {
   
   // JSON IMPORT LOGIC [UPGRADE SKDI]
   const processJsonData = async (jsonData: any[]) => {
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap");
+        return;
+      }
+      
       const collectionName = activeSection === 'soal' ? "cbt_questions" : "cbt_materials";
       for (let i = 0; i < jsonData.length; i++) {
           const item = jsonData[i];

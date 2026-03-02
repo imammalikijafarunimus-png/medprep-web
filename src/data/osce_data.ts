@@ -54,11 +54,65 @@ export interface ChecklistItem {
   script?: string;
 }
 
-export interface OSCESection {
-  type: 'checklist'; // Fokus pada checklist untuk simulator
+// ============================================
+// SECTION TYPES (Union Type Pattern)
+// ============================================
+
+// 1. Standard Anamnesis Section
+export interface SectionStandardAnamnesis {
+  type: 'standard_anamnesis';
+  title: string;
+  data: {
+    keluhan_utama: string;
+    rps: string[];
+    rpd: string[];
+    rpk: string[];
+    kebiasaan?: string[];
+    script?: string;
+  };
+}
+
+// 2. Pediatric History Section
+export interface SectionPediatricHistory {
+  type: 'pediatric_history';
+  title: string;
+  data: {
+    prenatal: string[];
+    natal: string[];
+    postnatal: string[];
+    nutrisi: string[];
+    script?: string;
+  };
+}
+
+// 3. Psychiatry Status Section
+export interface SectionPsychiatryStatus {
+  type: 'psychiatry_status';
+  title: string;
+  data: {
+    penampilan: string[];
+    mood_afek: string[];
+    pembicaraan: string[];
+    persepsi: string[];
+    pikiran: string[];
+    tilikan: string;
+    script?: string;
+  };
+}
+
+// 4. Checklist Section
+export interface SectionChecklist {
+  type: 'checklist';
   title: string;
   items: ChecklistItem[];
 }
+
+// Union Type for all section types
+export type OSCESection = 
+  | SectionStandardAnamnesis 
+  | SectionPediatricHistory 
+  | SectionPsychiatryStatus 
+  | SectionChecklist;
 
 export interface StationData {
   id: string;

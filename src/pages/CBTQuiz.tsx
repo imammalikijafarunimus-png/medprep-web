@@ -1,4 +1,3 @@
-// src/components/MaterialReader.tsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { 
@@ -7,7 +6,7 @@ import {
   Trophy, Activity, Target
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, isFirebaseInitialized } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import PremiumLock from '../components/PremiumLock';
 import toast from 'react-hot-toast';
@@ -54,7 +53,15 @@ export default function MaterialReader() {
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!system) return;
-      setLoading(true); 
+      setLoading(true);
+      
+      // Check Firebase
+      if (!isFirebaseInitialized() || !db) {
+        toast.error("Firebase belum siap. Periksa konfigurasi .env.local");
+        setLoading(false);
+        return;
+      }
+      
       try {
         const q = query(collection(db, "cbt_questions"), where("system", "==", system));
         const snapshot = await getDocs(q);

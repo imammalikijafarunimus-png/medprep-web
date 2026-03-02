@@ -3,7 +3,7 @@ import { Bell, Search, Menu, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext'; // Import Hook Theme
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase'; // Pastikan path import ini benar (sesuai file firebase.ts Anda)
+import { db, isFirebaseInitialized } from '../../lib/firebase'; // Updated import
 
 // Definisi tipe data state lokal (bisa dipisah ke file types jika mau)
 interface UserProfileData {
@@ -19,6 +19,12 @@ export default function Header() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Check if Firebase is initialized and db is not null
+      if (!isFirebaseInitialized() || !db) {
+        console.warn('[Header] Firebase not initialized');
+        return;
+      }
+      
       // 2. FIX: Gunakan currentUser
       if (currentUser?.uid) {
         try {
