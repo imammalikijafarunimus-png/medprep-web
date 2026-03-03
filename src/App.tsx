@@ -9,7 +9,7 @@ import { IslamicModeProvider } from './context/IslamicModeContext';
 
 // Layout & Components
 import Layout from './components/Layout/Layout';
-import PrivateRoute from './components/PrivateRoute'; // Import dari komponen yang baru dibuat
+import PrivateRoute from './components/PrivateRoute';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -42,30 +42,23 @@ function App() {
               {/* 2. PROTECTED APP ROUTES */}
               <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 
-                {/* Redirect /app ke /app/dashboard */}
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
                 
                 <Route path="dashboard" element={<Dashboard />} />
                 
-                {/* CBT Routes */}
                 <Route path="cbt" element={<CBTCenter />} />
                 <Route path="cbt/read" element={<MateriViewer />} />
                 <Route path="cbt/quiz" element={<MateriReader />} />
                 
-                {/* Skill & Drill Routes */}
                 <Route path="osce" element={<OSCEStation />} />
                 <Route path="oscie" element={<OSCIECenter />} />
                 <Route path="flashcards" element={<FlashcardDrill />} />
                 
-                {/* User Routes */}
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="admin" element={<AdminDashboard />} />
                 
-                {/* Subscription Routes */}
                 <Route path="subscription" element={<Subscription />} />
-
-                {/* TrendAnalysis Routes */}
-                <Route path="/app/trends" element={<TrendAnalysis />} />
+                <Route path="trends" element={<TrendAnalysis />} />
 
               </Route>
 
@@ -73,7 +66,6 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
 
-            {/* Toast Notification */}
             <Toaster 
               position="top-center" 
               reverseOrder={false}

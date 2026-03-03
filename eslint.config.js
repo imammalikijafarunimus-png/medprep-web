@@ -5,7 +5,16 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'coverage'] },
+  { 
+    ignores: [
+      'dist', 
+      'node_modules', 
+      'coverage',
+      '**/*.d.ts',  // Add this - ignore TypeScript declaration files
+      'src/vitest.d.ts',
+      'src/vite-env.d.ts',
+    ] 
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -33,7 +42,6 @@ export default tseslint.config(
       }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
-      // Turn these React 19 strict rules to warn only
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/purity': 'off',
       'react-hooks/static-components': 'off',
