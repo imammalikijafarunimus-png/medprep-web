@@ -100,7 +100,7 @@ export default function CBTCenter() {
           }
         });
 
-        let result = Object.values(groups);
+        const result = Object.values(groups);
         if (latihanCategory === 'arsip') {
           result.sort((a:any, b:any) => b.year - a.year);
         } else {

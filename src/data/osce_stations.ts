@@ -10,6 +10,7 @@ export type OSCECategory =
 interface SectionStandardAnamnesis {
   type: 'standard_anamnesis';
   title: string;
+  items?: { label: string; script?: string; insight?: string; isCritical?: boolean }[];
   data: {
     keluhan_utama: string;
     rps: string[]; // Lokasi, Onset, Kualitas, dll

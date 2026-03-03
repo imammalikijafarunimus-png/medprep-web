@@ -75,7 +75,7 @@ export function useBookmarks() {
     } catch (error) {
       console.error('Failed to save bookmarks:', error);
     }
-  }, [currentUser?.uid]);
+  }, [currentUser]);
 
   // Add bookmark
   const addBookmark = useCallback((bookmark: Omit<Bookmark, 'createdAt'>) => {

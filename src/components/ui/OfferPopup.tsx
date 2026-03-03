@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Crown, Sparkles, Check, MessageCircle, ArrowRight, Shield, Zap, BookOpen, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { isMuhammadiyahUniversity } from '../../data/universities';
 
 // ===============================
 // TYPES
@@ -328,7 +329,6 @@ export function useOfferPopup({
   delay = 1500,
 }: UseOfferPopupOptions) {
   const [showOffer, setShowOffer] = useState(false);
-  const { isMuhammadiyahUniversity } = require('../../data/universities');
   
   const variant: OfferVariant = isMuhammadiyahUniversity(university) ? 'muhammadiyah' : 'general';
 
