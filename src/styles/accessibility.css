@@ -1,0 +1,267 @@
+/**
+ * Accessibility CSS Utilities
+ * Add these to your main index.css or tailwind.config.js
+ * 
+ * @file src/styles/accessibility.css
+ */
+
+/* ============================================
+   FOCUS STATES - Visible focus indicators
+   ============================================ */
+
+/* Base focus ring - use with focus-visible */
+.focus-ring {
+    @apply outline-none ring-2 ring-offset-2 ring-teal-500 ring-offset-white dark:ring-offset-slate-900;
+  }
+  
+  /* Focus ring for buttons */
+  .btn-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 
+           focus-visible:ring-teal-500 focus-visible:ring-offset-white 
+           dark:focus-visible:ring-offset-slate-900;
+  }
+  
+  /* Focus ring for inputs */
+  .input-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+  }
+  
+  /* ============================================
+     SKIP LINKS - For keyboard navigation
+     ============================================ */
+  
+  .skip-link {
+    @apply absolute left-4 top-4 z-[9999] px-4 py-2 bg-slate-900 text-white 
+           rounded-xl font-bold text-sm shadow-2xl -translate-y-16 
+           focus:translate-y-0 transition-transform duration-200;
+  }
+  
+  /* ============================================
+     SCREEN READER ONLY - Hide visually but keep for SR
+     ============================================ */
+  
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Show when focused */
+  .sr-only-focusable:focus,
+  .sr-only-focusable:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  
+  /* ============================================
+     REDUCED MOTION - Respect user preferences
+     ============================================ */
+  
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .animate-pulse,
+    .animate-spin,
+    .animate-bounce,
+    .animate-ping {
+      animation: none !important;
+    }
+  }
+  
+  /* ============================================
+     HIGH CONTRAST MODE - Enhanced visibility
+     ============================================ */
+  
+  @media (prefers-contrast: high) {
+    .card,
+    .bg-white,
+    .bg-slate-50,
+    .dark\:bg-slate-900 {
+      border: 2px solid currentColor !important;
+    }
+    
+    button, a {
+      text-decoration: underline;
+    }
+  }
+  
+  /* ============================================
+     TOUCH TARGETS - Minimum 44x44px for mobile
+     ============================================ */
+  
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .touch-target-sm {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  /* ============================================
+     COLOR BLIND FRIENDLY - Don't rely only on color
+     ============================================ */
+  
+  /* Add icons or patterns for status indicators */
+  .status-success {
+    @apply text-green-600 dark:text-green-400;
+  }
+  
+  .status-success::before {
+    content: "✓ ";
+  }
+  
+  .status-error {
+    @apply text-red-600 dark:text-red-400;
+  }
+  
+  .status-error::before {
+    content: "✗ ";
+  }
+  
+  .status-warning {
+    @apply text-amber-600 dark:text-amber-400;
+  }
+  
+  .status-warning::before {
+    content: "⚠ ";
+  }
+  
+  /* ============================================
+     LOADING STATES - For screen readers
+     ============================================ */
+  
+  .loading-announcer {
+    @apply fixed w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  
+  /* ============================================
+     CUSTOM SCROLLBAR - Accessible colors
+     ============================================ */
+  
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 9999px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.5);
+  }
+  
+  /* Dark mode */
+  .dark .custom-scrollbar {
+    scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
+  }
+  
+  /* ============================================
+     ANIMATIONS - With reduced motion support
+     ============================================ */
+  
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slide-up {
+    from { 
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+  
+  /* ============================================
+     PRINT STYLES - For printing content
+     ============================================ */
+  
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    a {
+      text-decoration: underline;
+    }
+    
+    a[href^="http"]::after {
+      content: " (" attr(href) ")";
+      font-size: 0.8em;
+      color: #666;
+    }
+  }
+  
+  /* ============================================
+     LANDMARKS - For screen reader navigation
+     ============================================ */
+  
+  /* These classes don't add styles but help semantic HTML */
+  [role="banner"] { /* Header */ }
+  [role="navigation"] { /* Nav */ }
+  [role="main"] { /* Main content */ }
+  [role="complementary"] { /* Sidebar/aside */ }
+  [role="contentinfo"] { /* Footer */ }
+  [role="search"] { /* Search form */ }  

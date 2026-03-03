@@ -1,16 +1,334 @@
-# React + Vite
+# MedPrep Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Platform belajar kedokteran untuk persiapan UKMPPD (Uji Kompetensi Mahasiswa Pendidikan Dokter) dengan Bank Soal CBT, Checklist OSCE, dan Wawasan Bioetika Islam.
 
-Currently, two official plugins are available:
+## Daftar Isi
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [Fitur](#fitur)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Instalasi](#instalasi)
+- [Konfigurasi Environment](#konfigurasi-environment)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Struktur Project](#struktur-project)
+- [Scripts](#scripts)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Kontribusi](#kontribusi)
+- [Lisensi](#lisensi)
 
-## React Compiler
+## Fitur
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Bank Soal CBT (Computer Based Test)
+- Ribuan soal latihan dengan pembahasan
+- Simulasi ujian dengan timer
+- Analisis performa per sistem organ
+- Tracking progress belajar
 
-## Expanding the ESLint configuration
+### Checklist OSCE (Objective Structured Clinical Examination)
+- Station-stations OSCE lengkap
+- Checklist pemeriksaan fisik
+- Panduan komunikasi dengan pasien
+- Skoring otomatis
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Flashcard Drill
+- Spaced repetition learning
+- Kartu flashcard interaktif
+- Tracking mastery level
+
+### Fitur Tambahan
+- Dark/Light theme
+- Mode Islami (wawasan bioetika & waktu sholat)
+- Multi-university support
+- Admin dashboard
+- Subscription system
+
+## Tech Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.x | UI Library |
+| TypeScript | 5.x | Type Safety |
+| Vite | 7.x | Build Tool |
+| Firebase | 12.x | Backend & Authentication |
+| Tailwind CSS | 3.x | Styling |
+| React Router | 7.x | Routing |
+| Vitest | 2.x | Testing |
+| Lucide React | Latest | Icons |
+
+## Prerequisites
+
+Pastikan sudah terinstall:
+
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0 atau **bun** (recommended)
+- **Git**
+
+## Instalasi
+
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/imammalikijafarunimus-png/medprep-web.git
+   cd medprep-web
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # atau dengan bun (lebih cepat)
+   bun install
+   ```
+
+3. **Setup environment variables**
+   
+   Copy file `.env.example` ke `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Lalu isi dengan konfigurasi Firebase Anda (lihat [Konfigurasi Environment](#konfigurasi-environment)).
+
+4. **Jalankan development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Buka browser** di `http://localhost:5173`
+
+## Konfigurasi Environment
+
+Buat file `.env.local` di root project dengan variabel berikut:
+
+```env
+# Firebase Configuration
+VITE_API_KEY=your_firebase_api_key
+VITE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_PROJECT_ID=your_project_id
+VITE_STORAGE_BUCKET=your_project.appspot.com
+VITE_MESSAGING_SENDER_ID=your_sender_id
+VITE_APP_ID=your_app_id
+```
+
+### Cara Mendapatkan Firebase Config
+
+1. Buka [Firebase Console](https://console.firebase.google.com/)
+2. Buat project baru atau pilih project existing
+3. Klik **Project Settings** (gear icon)
+4. Scroll ke bagian **Your apps** > **Web apps**
+5. Klik app atau buat baru
+6. Copy konfigurasi ke `.env.local`
+
+### Firebase Services yang Dibutuhkan
+
+- **Authentication** - Email/Password & Google Sign-In
+- **Firestore Database** - User data & progress
+- **Storage** (optional) - User avatars
+
+## Menjalankan Aplikasi
+
+### Development Mode
+```bash
+npm run dev
+```
+Aplikasi akan berjalan di `http://localhost:5173` dengan Hot Module Replacement (HMR).
+
+### Production Build
+```bash
+npm run build
+```
+Hasil build akan ada di folder `dist/`.
+
+### Preview Production Build
+```bash
+npm run preview
+```
+
+## Struktur Project
+
+```
+medprep-web/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions CI/CD
+├── public/
+│   └── logo.jpg                # Logo aplikasi
+├── src/
+│   ├── components/             # Reusable UI components
+│   │   ├── Layout/             # Layout components (Sidebar, Header, etc)
+│   │   ├── MarkdownAlert.tsx   # Markdown alert component
+│   │   ├── PremiumLock.tsx     # Premium content lock
+│   │   └── PrivateRoute.tsx    # Auth route guard
+│   ├── config/                 # App configuration
+│   │   └── admin_list.ts       # Admin users list
+│   ├── context/                # React Context providers
+│   │   ├── AuthContext.tsx     # Authentication context
+│   │   ├── ThemeContext.tsx    # Theme context
+│   │   └── IslamicModeContext.tsx
+│   ├── data/                   # Static data
+│   │   ├── cases/              # Case studies per system
+│   │   ├── stations/           # OSCE stations data
+│   │   ├── categories.ts       # Question categories
+│   │   ├── flashcard_data.ts   # Flashcard content
+│   │   └── universities.ts     # University list
+│   ├── hooks/                  # Custom React hooks
+│   ├── lib/                    # Utilities & configurations
+│   │   ├── firebase.ts         # Firebase initialization
+│   │   ├── validation.ts       # Input validation & sanitization
+│   │   ├── rateLimiter.ts      # Rate limiting utility
+│   │   └── markdownSanitizer.ts
+│   ├── pages/                  # Page components
+│   │   ├── Dashboard.tsx
+│   │   ├── CBTCenter.tsx
+│   │   ├── OSCECenter.tsx
+│   │   ├── FlashcardDrill.tsx
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   └── ...
+│   ├── test/                   # Test utilities
+│   │   ├── setup.ts            # Test setup
+│   │   ├── test-utils.tsx      # Testing utilities
+│   │   └── mock/               # Mock data
+│   ├── types/                  # TypeScript type definitions
+│   ├── utils/                  # Helper functions
+│   │   └── device.ts           # Device fingerprinting
+│   ├── App.tsx                 # Main app component
+│   ├── main.tsx                # Entry point
+│   └── index.css               # Global styles
+├── eslint.config.js            # ESLint configuration
+├── package.json
+├── tailwind.config.js          # Tailwind CSS config
+├── tsconfig.json               # TypeScript config
+├── vite.config.js              # Vite config
+└── vitest.d.ts                 # Vitest type declarations
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Jalankan development server |
+| `npm run build` | Build untuk production (dengan typecheck) |
+| `npm run build:force` | Build tanpa typecheck |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Jalankan ESLint |
+| `npm run lint:fix` | Fix ESLint errors |
+| `npm run typecheck` | Cek TypeScript types |
+| `npm run test` | Jalankan tests (watch mode) |
+| `npm run test:run` | Jalankan tests sekali |
+| `npm run test:coverage` | Tests dengan coverage report |
+| `npm run security:audit` | Security audit dependencies |
+
+## Testing
+
+Project menggunakan **Vitest** + **React Testing Library**.
+
+### Menjalankan Tests
+```bash
+# Watch mode
+npm run test
+
+# Run once
+npm run test:run
+
+# Dengan coverage
+npm run test:coverage
+```
+
+### Test Structure
+```
+src/
+├── test/
+│   ├── setup.ts          # Test configuration
+│   ├── test-utils.tsx    # Custom render dengan providers
+│   └── mock/
+│       └── firebase.ts   # Firebase mocks
+└── **/*.test.ts(x)       # Test files
+```
+
+## Deployment
+
+### Vercel (Recommended)
+1. Connect repository ke Vercel
+2. Set environment variables di Vercel Dashboard
+3. Deploy otomatis setiap push ke main
+
+### Netlify
+1. Connect repository ke Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist`
+4. Set environment variables
+
+### Manual Deployment
+```bash
+# Build
+npm run build
+
+# File statis ada di folder dist/
+# Upload ke hosting pilihan Anda
+```
+
+### Firebase Hosting
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Login
+firebase login
+
+# Init hosting
+firebase init hosting
+
+# Deploy
+firebase deploy --only hosting
+```
+
+## Keamanan
+
+Project ini mengimplementasikan beberapa fitur keamanan:
+
+- **Input Validation & Sanitization** - Mencegah XSS attacks
+- **Rate Limiting** - Mencegah brute force attacks
+- **Device Fingerprinting** - Deteksi multi-device
+- **Environment Validation** - Validasi konfigurasi Firebase
+- **Password Strength Check** - Validasi kekuatan password
+
+## Kontribusi
+
+Kami sangat mengapresiasi kontribusi! Silakan ikuti langkah berikut:
+
+1. **Fork** repository ini
+2. Buat **branch** fitur (`git checkout -b feature/amazing-feature`)
+3. **Commit** perubahan (`git commit -m 'Add amazing feature'`)
+4. **Push** ke branch (`git push origin feature/amazing-feature`)
+5. Buat **Pull Request`
+
+### Coding Standards
+- Ikuti ESLint rules yang sudah dikonfigurasi
+- Tulis tests untuk fitur baru
+- Update dokumentasi jika diperlukan
+- Gunakan conventional commits
+
+## Tim Pengembang
+
+- **MedPrep Team** - *Initial work*
+
+## Lisensi
+
+Project ini dilisensikan di bawah **MIT License** - lihat file [LICENSE](LICENSE) untuk detail.
+
+---
+
+## Support
+
+Jika mengalami masalah atau memiliki pertanyaan:
+
+1. Buka **Issue** di GitHub repository
+2. Sertakan:
+   - Deskripsi masalah
+   - Langkah untuk reproduce
+   - Screenshot (jika ada)
+   - Environment (OS, Node version, dll)
+
+---
+
+**MedPrep Web** - Belajar kedokteran dengan lebih efektif! 🏥📚
