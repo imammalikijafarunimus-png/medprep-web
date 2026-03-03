@@ -4,10 +4,10 @@
  */
 
 import React, { ReactElement, ReactNode } from 'react';
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react';
+import { render, RenderOptions, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, MemoryRouterProps } from 'react-router-dom';
-import { vi } from 'vitest';
+import { BrowserRouter, MemoryRouter, MemoryRouterProps } from 'react-router-dom';
+import { vi, expect } from 'vitest';
 
 // ============================================
 // Types

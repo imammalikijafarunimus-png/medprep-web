@@ -135,11 +135,11 @@ export const resetFirebaseMocks = () => {
 
 // Set authenticated user
 export const setAuthenticatedUser = (user: Partial<{ uid: string; email: string | null; displayName: string | null; photoURL: string | null }>) => {
-  mockAuth.currentUser = {
-    uid: user.uid || 'test-uid',
-    email: user.email || 'test@test.com',
-    displayName: user.displayName || 'Test User',
-    photoURL: user.photoURL || null,
+    (mockAuth as any).currentUser = {
+    uid: 'test-uid',
+    email: 'test@test.com',
+    displayName: 'Test User',
+    photoURL: null,
   };
 };
 

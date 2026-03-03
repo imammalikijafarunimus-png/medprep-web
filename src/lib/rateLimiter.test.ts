@@ -212,7 +212,7 @@ describe('RateLimiter', () => {
       const result = rateLimiter.check(action);
       expect(result.allowed).toBe(false);
       expect(result.message).toBeDefined();
-      expect(result.message.length).toBeGreaterThan(0);
+      expect(result.message?.length ?? 0).toBeGreaterThan(0);
     });
   });
 });
