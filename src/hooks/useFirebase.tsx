@@ -59,11 +59,12 @@ export function useFirebase(): UseFirebaseResult {
 
   useEffect(() => {
     const ready = isFirebaseInitialized();
-    setStatus({
+    // Use functional update to avoid cascading
+    setStatus(() => ({
       isReady: ready,
       db: ready ? db : null,
       auth: ready ? auth : null
-    });
+    }));
   }, []);
 
   // Safe document reference
@@ -239,7 +240,7 @@ export function useUserProfile(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId || !isReady) {
-      setProfile(null);
+      setProfile(() => null);
       return;
     }
 

@@ -50,8 +50,8 @@ export default function Dashboard() {
 
     // Set Random Quote
     const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
-    setCurrentQuote(motivationalQuotes[randomIndex]);
-  }, [currentUser]);
+  setCurrentQuote(() => motivationalQuotes[randomIndex]);
+}, [currentUser]);
 
   // Popup Logic
   useEffect(() => {

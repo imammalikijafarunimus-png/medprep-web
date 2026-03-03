@@ -305,7 +305,7 @@ export interface ValidationResult {
     }
     
     // Check format (letters, spaces, some special chars)
-    if (!/^[a-zA-ZÀ-ÿ\s\-'\.]+$/.test(trimmedName)) {
+    if (!/^[a-zA-ZÀ-ÿ\s\-'.]+$/.test(trimmedName)) {
       errors.push('Nama hanya boleh mengandung huruf dan spasi');
     }
     

@@ -157,7 +157,7 @@ export default function MaterialViewer() {
   };
 
   const processedMaterials = useMemo(() => {
-      let result = materials.filter(item => 
+      const result = materials.filter(item => 
           item.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.content.toLowerCase().includes(searchQuery.toLowerCase())
       );

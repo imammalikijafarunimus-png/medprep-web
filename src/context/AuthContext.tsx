@@ -443,7 +443,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const docRef = doc(currentDb, "users", firebaseUser.uid);
         const docSnap = await getDoc(docRef);
         
-        let userData: AppUser = {
+        const userData: AppUser = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,

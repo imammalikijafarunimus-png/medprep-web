@@ -94,6 +94,11 @@ export default function AdminDashboard() {
     type: 'free'
   });
 
+  // --- HOOKS (must be called before any conditional returns) ---
+  useEffect(() => { 
+      if (activeTab === 'list' || activeSection === 'users') fetchData(); 
+  }, [activeTab, activeSection]);
+
   // SECURITY CHECK
   if (!isAdmin(currentUser?.email)) {
      return (
@@ -292,10 +297,6 @@ export default function AdminDashboard() {
       finally { setLoading(false); }
   };
 
-  useEffect(() => { 
-      if (activeTab === 'list' || activeSection === 'users') fetchData(); 
-  }, [activeTab, activeSection]);
-  
   // FILTERING LOGIC
   const getFilteredData = () => {
       if (activeSection === 'soal') {
