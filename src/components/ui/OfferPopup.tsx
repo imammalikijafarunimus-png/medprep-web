@@ -50,8 +50,8 @@ interface PackageInfo {
 const PACKAGE_CONFIG: Record<OfferVariant, PackageInfo> = {
   muhammadiyah: {
     name: "Muhammadiyah Special Pack",
-    price: "129.000",
-    originalPrice: "199.000",
+    price: "75.000",
+    originalPrice: "159.000",
     badge: "KHUSUS PTM",
     description: "Paket eksklusif untuk mahasiswa Perguruan Tinggi Muhammadiyah",
     features: [
@@ -67,8 +67,8 @@ const PACKAGE_CONFIG: Record<OfferVariant, PackageInfo> = {
   },
   general: {
     name: "Pro Pack",
-    price: "99.000",
-    originalPrice: "149.000",
+    price: "45.000",
+    originalPrice: "99.000",
     badge: "TERLARIS",
     description: "Akses lengkap semua fitur premium MedPrep",
     features: [
@@ -131,7 +131,7 @@ export function OfferPopup({
     if (onWhatsApp) {
       onWhatsApp();
     } else {
-      const adminPhone = "6285786456321";
+      const adminPhone = "6288980507501";
       const text = `Halo Admin, saya ${userName} dari ${university}.\nMau ambil paket *${config.name}* (Rp ${config.price}).`;
       window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
     }
