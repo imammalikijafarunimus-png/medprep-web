@@ -28,7 +28,7 @@ import toast from 'react-hot-toast';
 
 export default function Layout() {
   const { currentUser, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
   const { totalAnswered, accuracy, streak } = useUserStats();
   const location = useLocation();
   const navigate = useNavigate();
@@ -104,11 +104,9 @@ export default function Layout() {
   }, [currentUser?.subscriptionStatus, isInsightActive]);
 
   const getThemeIcon = () => {
-    switch (theme) {
-      case 'dark': return <Moon size={18} className="text-indigo-400" />;
-      case 'read': return <BookOpen size={18} className="text-amber-700" />;
-      default: return <Sun size={18} className="text-orange-500" />;
-    }
+    return isDarkMode 
+      ? <Moon size={18} className="text-indigo-400" /> 
+      : <Sun size={18} className="text-orange-500" />;
   };
 
   const pageTitle = getPageTitle(location.pathname);
@@ -117,9 +115,9 @@ export default function Layout() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans ${
-      theme === 'read' 
-        ? 'bg-[#fbf6e9] text-[#433422]' 
-        : 'bg-slate-50 dark:bg-[#0B1120] dark:text-slate-200'
+      isDarkMode 
+        ? 'bg-[#0B1120] text-slate-200' 
+        : 'bg-slate-50 text-slate-900'
     }`}>
       
       {/* Skip Link */}

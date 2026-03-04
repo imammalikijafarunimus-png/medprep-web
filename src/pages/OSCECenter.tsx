@@ -552,7 +552,7 @@ export default function OSCEStation() {
                         </div>
                         <div>
                           <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-teal-600 transition-colors">{section.title}</h3>
-                          <p className="text-xs text-slate-400">{section.items?.length || 0} Langkah</p>
+                          <p className="text-xs text-slate-400">{('items' in section ? (section as any).items?.length : 0) || 0} Langkah</p>
                         </div>
                       </div>
                       <ChevronRight size={18} className="text-slate-300 group-hover:text-teal-500" />
