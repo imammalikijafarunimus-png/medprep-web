@@ -15,9 +15,16 @@
  * ✅ ADDED: Role read from Firebase ID Token Custom Claims
  * ✅ ADDED: refreshClaims() for token refresh after role change
  * ✅ ADDED: Role helper properties (isAdmin, isSuperAdmin)
+ * 
+ * FIXES (v2):
+ * ✅ FIX #1: login() — updateDoc untuk device tracking tidak lagi memblokir
+ *            login jika gagal (non-critical, wrapped in silent try/catch)
+ * ✅ FIX #2: onAuthStateChanged — force refresh token setelah fresh sign-in
+ *            agar custom claims terbaru (superadmin dll) langsung terbaca
+ *            tanpa perlu manual refreshClaims()
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { 
   onAuthStateChanged, 
   User as FirebaseUser, 
@@ -144,6 +151,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
 
+  // ✅ FIX #2: Ref untuk tandai apakah ini fresh sign-in (bukan restore session).
+  // Jika fresh sign-in, force refresh token agar custom claims terbaru langsung terbaca.
+  const justSignedInRef = useRef(false);
+
   // ============================================
   // BUILD USER WITH CUSTOM CLAIMS
   // ============================================
@@ -162,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Get ID token with custom claims
     const tokenResult = await getIdTokenResult(user, forceRefresh);
     
-    // Extract role from claims (set by Cloud Functions)
+    // Extract role from claims (set by Cloud Functions / Admin SDK)
     const role = parseRole(tokenResult.claims.role, 'student');
 
     // Get additional user data from Firestore
@@ -326,10 +337,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider.addScope('email');
       provider.addScope('profile');
       
+      // ✅ FIX #2: Tandai sebagai fresh sign-in sebelum signInWithPopup
+      justSignedInRef.current = true;
       await signInWithPopup(auth, provider);
       
       logSecurityEvent('GOOGLE_SIGNIN_SUCCESS', { device: deviceInfo?.deviceId });
     } catch (error) {
+      justSignedInRef.current = false;
       rateLimiter.record('google_signin');
       logSecurityEvent('GOOGLE_SIGNIN_FAILED', { error });
       throw error;
@@ -443,20 +457,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sanitizedEmail = emailValidation.sanitized!;
 
     try {
+      // ✅ FIX #2: Tandai fresh sign-in SEBELUM signIn agar onAuthStateChanged
+      // tahu harus force refresh token (ambil custom claims terbaru)
+      justSignedInRef.current = true;
+
       const userCredential = await signInWithEmailAndPassword(auth, sanitizedEmail, password);
       
       if (userCredential.user) {
         const deviceId = deviceInfo?.deviceId || 'unknown';
         createSession(deviceId);
-        
-        await updateDoc(doc(db, "users", userCredential.user.uid), {
-          deviceId: deviceId,
-          lastLoginAt: serverTimestamp(),
-        });
+
+        // ✅ FIX #1: updateDoc untuk device tracking adalah non-critical.
+        // Jangan biarkan kegagalannya memblokir proses login!
+        // (Dulu: jika updateDoc gagal → error dilempar → "Gagal masuk" ditampilkan)
+        try {
+          await updateDoc(doc(db, "users", userCredential.user.uid), {
+            deviceId: deviceId,
+            lastLoginAt: serverTimestamp(),
+          });
+        } catch (trackingError) {
+          // Gagal update device tracking tidak memblokir login
+          console.warn('[Auth] Device tracking update failed (non-critical):', trackingError);
+        }
 
         logSecurityEvent('LOGIN_SUCCESS', { uid: userCredential.user.uid, device: deviceId });
       }
     } catch (error) {
+      justSignedInRef.current = false;
       rateLimiter.record('login');
       logSecurityEvent('LOGIN_FAILED', { email: sanitizedEmail, error });
       throw error;
@@ -533,8 +560,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (fbUser) {
         try {
+          // ✅ FIX #2: Jika ini fresh sign-in (login/loginWithGoogle baru dipanggil),
+          // force refresh token agar custom claims terbaru (misal: superadmin)
+          // langsung terbaca tanpa perlu manual refreshClaims().
+          const shouldForceRefresh = justSignedInRef.current;
+          justSignedInRef.current = false; // reset flag
+
           // Build user with Custom Claims
-          const medPrepUser = await buildMedPrepUser(fbUser);
+          const medPrepUser = await buildMedPrepUser(fbUser, shouldForceRefresh);
           
           // Single device check (only for premium users)
           const currentDeviceId = deviceInfo?.deviceId;
