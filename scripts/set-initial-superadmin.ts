@@ -30,11 +30,16 @@
  * - This script should only be run by trusted administrators
  */
 
-import * as admin from 'firebase-admin';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import admin from 'firebase-admin';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load .env if exists
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Configuration
