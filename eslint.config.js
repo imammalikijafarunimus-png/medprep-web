@@ -13,6 +13,8 @@ export default tseslint.config(
       '**/*.d.ts',  // Add this - ignore TypeScript declaration files
       'src/vitest.d.ts',
       'src/vite-env.d.ts',
+      'functions',  // Separate TypeScript project
+      'scripts',    // Standalone scripts, linted separately
     ] 
   },
   {

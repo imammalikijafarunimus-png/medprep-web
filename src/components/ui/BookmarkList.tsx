@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Bookmark, FileQuestion, FolderOpen, Stethoscope, 
-  Trash2, Search, Filter, SortAsc 
+  Trash2, Search 
 } from 'lucide-react';
 import { useBookmarks, BookmarkType } from '../../hooks/useBookmarks';
 import { cn } from '../../lib/utils';

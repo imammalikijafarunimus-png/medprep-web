@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   ChevronsLeft, ChevronsRight, Menu, X,
-  Sun, Moon, BookOpen, Search, LogOut,
+  Sun, Moon, LogOut,
   Settings, Lock, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +29,7 @@ import toast from 'react-hot-toast';
 export default function Layout() {
   const { currentUser, logout, isAdmin, isSuperAdmin } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
-  const { totalAnswered, accuracy, streak } = useUserStats();
+  useUserStats(); // Initialize user stats
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -113,7 +113,7 @@ export default function Layout() {
       : <Sun size={18} className="text-orange-500" />;
   };
 
-  const pageTitle = getPageTitle(location.pathname);
+  const _pageTitle = getPageTitle(location.pathname); // Reserved for future use
   const displayName = currentUser?.displayName?.split(' ')[0] || 'Dokter';
   const subscriptionStatus = currentUser?.subscriptionStatus || 'free';
 

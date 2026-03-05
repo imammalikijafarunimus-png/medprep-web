@@ -46,7 +46,8 @@ export function PageTransition({
     if (variant === 'none') return '';
     
     const baseClass = 'transition-all';
-    const durationClass = `duration-${duration}`;
+    // Duration is applied via style prop instead of Tailwind class for dynamic values
+    const _durationClass = `duration-${duration}`;
     
     if (isTransitioning) {
       switch (variant) {
