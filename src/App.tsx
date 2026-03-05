@@ -28,7 +28,17 @@ import UserProfile from './pages/Profile';
 import AdminDashboard from './pages/AdminPanel';
 import Subscription from './pages/Subscription';
 import TrendAnalysis from './pages/TrendAnalysis';
+import UserManagement from './pages/UserManagement';
 
+/**
+ * Main Application Component
+ * 
+ * Routes are organized by access level:
+ * 1. Public routes - No authentication required
+ * 2. Protected routes - Authentication required (student+)
+ * 3. Admin routes - Admin role required
+ * 4. Superadmin routes - Superadmin role required
+ */
 function App() {
   return (
     <AuthProvider>
@@ -38,12 +48,18 @@ function App() {
             <ToastProvider>
               <BrowserRouter>
                 <Routes>
-                  {/* 1. PUBLIC ROUTES */}
+                  {/* ============================================
+                      1. PUBLIC ROUTES
+                      No authentication required
+                      ============================================ */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
 
-                  {/* 2. PROTECTED APP ROUTES */}
+                  {/* ============================================
+                      2. PROTECTED APP ROUTES (student+)
+                      Requires login, minimum role: student
+                      ============================================ */}
                   <Route 
                     path="/app" 
                     element={
@@ -52,7 +68,10 @@ function App() {
                       </PrivateRoute>
                     }
                   >
+                    {/* Default redirect to dashboard */}
                     <Route index element={<Navigate to="/app/dashboard" replace />} />
+                    
+                    {/* General user routes */}
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="cbt" element={<CBTCenter />} />
                     <Route path="cbt/read" element={<MateriViewer />} />
@@ -61,12 +80,40 @@ function App() {
                     <Route path="oscie" element={<OSCIECenter />} />
                     <Route path="flashcards" element={<FlashcardDrill />} />
                     <Route path="profile" element={<UserProfile />} />
-                    <Route path="admin" element={<AdminDashboard />} />
                     <Route path="subscription" element={<Subscription />} />
                     <Route path="trends" element={<TrendAnalysis />} />
+                    
+                    {/* ============================================
+                        3. ADMIN ROUTES (admin+)
+                        Requires minimum role: admin
+                        ============================================ */}
+                    <Route 
+                      path="admin" 
+                      element={
+                        <PrivateRoute requiredRole="admin">
+                          <AdminDashboard />
+                        </PrivateRoute>
+                      } 
+                    />
+                    
+                    {/* ============================================
+                        4. SUPERADMIN ROUTES
+                        Requires role: superadmin
+                        ============================================ */}
+                    <Route 
+                      path="users" 
+                      element={
+                        <PrivateRoute requiredRole="superadmin">
+                          <UserManagement />
+                        </PrivateRoute>
+                      } 
+                    />
                   </Route>
 
-                  {/* 3. FALLBACK */}
+                  {/* ============================================
+                      FALLBACK
+                      Redirect unknown routes to home
+                      ============================================ */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
 

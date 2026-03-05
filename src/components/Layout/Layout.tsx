@@ -18,7 +18,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useUserStats } from '../../hooks/useUserStats';
-import { NAV_ITEMS, getPageTitle } from '../../config/navigation';
+import { getAllNavItems, getPageTitle } from '../../config/navigation';
 import { Logo, LogoCompact } from '../ui/Logo';
 import { QuickActions } from '../ui/QuickActions';
 import { SearchModal, SearchTrigger, useSearchShortcut } from '../ui/SearchModal';
@@ -27,11 +27,15 @@ import { useRecentSearches } from '../../hooks/useRecentSearches';
 import toast from 'react-hot-toast';
 
 export default function Layout() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAdmin, isSuperAdmin } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { totalAnswered, accuracy, streak } = useUserStats();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Get nav items based on user role
+  const navItems = getAllNavItems(isAdmin, isSuperAdmin, false);
+  const mobileNavItems = navItems.slice(0, 4);
   
   // Search
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -179,7 +183,7 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar w-full">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
             const Icon = item.icon;
             
@@ -352,7 +356,7 @@ export default function Layout() {
         aria-label="Menu mobile"
       >
         <div className="flex justify-around items-center h-16 px-2">
-          {NAV_ITEMS.slice(0, 4).map((item) => {
+          {mobileNavItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
             const Icon = item.icon;
             
@@ -396,7 +400,7 @@ export default function Layout() {
             </div>
             
             <div className="space-y-2">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 const Icon = item.icon;
                 

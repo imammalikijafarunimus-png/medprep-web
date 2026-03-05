@@ -59,7 +59,13 @@ export interface SubscriptionDetails {
 // USER ROLE
 // ============================================
 
-export type UserRole = 'student' | 'admin' | 'moderator';
+/**
+ * User roles with hierarchy:
+ * - student: Default role, can access learning content
+ * - admin: Can manage content (questions, OSCE stations)
+ * - superadmin: Full access, can manage user roles
+ */
+export type UserRole = 'student' | 'admin' | 'superadmin';
 
 // ============================================
 // USER SEGMENT

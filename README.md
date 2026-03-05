@@ -150,6 +150,13 @@ medprep-web/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml              # GitHub Actions CI/CD
+├── functions/                  # Firebase Cloud Functions
+│   ├── src/
+│   │   └── index.ts           # Role management functions
+│   ├── package.json
+│   └── tsconfig.json
+├── scripts/
+│   └── set-initial-superadmin.ts  # Setup script
 ├── public/
 │   └── logo.jpg                # Logo aplikasi
 ├── src/
@@ -157,11 +164,11 @@ medprep-web/
 │   │   ├── Layout/             # Layout components (Sidebar, Header, etc)
 │   │   ├── MarkdownAlert.tsx   # Markdown alert component
 │   │   ├── PremiumLock.tsx     # Premium content lock
-│   │   └── PrivateRoute.tsx    # Auth route guard
+│   │   └── PrivateRoute.tsx    # Auth route guard with role support
 │   ├── config/                 # App configuration
-│   │   └── admin_list.ts       # Admin users list
+│   │   └── navigation.ts       # Navigation items config
 │   ├── context/                # React Context providers
-│   │   ├── AuthContext.tsx     # Authentication context
+│   │   ├── AuthContext.tsx     # Authentication context with Custom Claims
 │   │   ├── ThemeContext.tsx    # Theme context
 │   │   └── IslamicModeContext.tsx
 │   ├── data/                   # Static data
@@ -171,6 +178,8 @@ medprep-web/
 │   │   ├── flashcard_data.ts   # Flashcard content
 │   │   └── universities.ts     # University list
 │   ├── hooks/                  # Custom React hooks
+│   │   ├── useRoleManagement.ts  # Role management hook
+│   │   └── ...
 │   ├── lib/                    # Utilities & configurations
 │   │   ├── firebase.ts         # Firebase initialization
 │   │   ├── validation.ts       # Input validation & sanitization
@@ -180,7 +189,8 @@ medprep-web/
 │   │   ├── Dashboard.tsx
 │   │   ├── CBTCenter.tsx
 │   │   ├── OSCECenter.tsx
-│   │   ├── FlashcardDrill.tsx
+│   │   ├── UserManagement.tsx  # Superadmin user management
+│   │   ├── AdminPanel.tsx      # Admin content management
 │   │   ├── Login.tsx
 │   │   ├── Register.tsx
 │   │   └── ...
@@ -189,11 +199,15 @@ medprep-web/
 │   │   ├── test-utils.tsx      # Testing utilities
 │   │   └── mock/               # Mock data
 │   ├── types/                  # TypeScript type definitions
+│   │   ├── auth.ts             # Auth types with UserRole
+│   │   └── user.ts             # User profile types
 │   ├── utils/                  # Helper functions
 │   │   └── device.ts           # Device fingerprinting
 │   ├── App.tsx                 # Main app component
 │   ├── main.tsx                # Entry point
 │   └── index.css               # Global styles
+├── firestore.rules             # Firestore security rules
+├── firebase.json               # Firebase configuration
 ├── eslint.config.js            # ESLint configuration
 ├── package.json
 ├── tailwind.config.js          # Tailwind CSS config
@@ -286,11 +300,63 @@ firebase deploy --only hosting
 
 Project ini mengimplementasikan beberapa fitur keamanan:
 
+- **Firebase Custom Claims** - Role-based access control server-side
 - **Input Validation & Sanitization** - Mencegah XSS attacks
 - **Rate Limiting** - Mencegah brute force attacks
 - **Device Fingerprinting** - Deteksi multi-device
 - **Environment Validation** - Validasi konfigurasi Firebase
 - **Password Strength Check** - Validasi kekuatan password
+- **Firestore Security Rules** - Database protection berbasis role
+
+### Role-Based Access Control (RBAC)
+
+Aplikasi menggunakan Firebase Custom Claims untuk role management:
+
+| Role | Akses |
+|------|-------|
+| `student` | Akses konten pembelajaran |
+| `admin` | Kelola konten (soal, materi OSCE) |
+| `superadmin` | Akses penuh termasuk kelola role user |
+
+### Setup Superadmin Pertama
+
+1. **Deploy Cloud Functions**
+   ```bash
+   cd functions
+   npm install
+   cd ..
+   firebase deploy --only functions
+   ```
+
+2. **Set Secret Key**
+   ```bash
+   firebase functions:secrets:set SUPERADMIN_INIT_SECRET
+   # Masukkan random string yang kuat
+   ```
+
+3. **Setup Superadmin**
+   ```bash
+   # Download serviceAccountKey.json dari Firebase Console
+   # Project Settings → Service Accounts → Generate new private key
+   
+   # JALANKAN SCRIPT (jangan commit serviceAccountKey.json!)
+   GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json \
+   SUPERADMIN_EMAIL=your@email.com \
+   npx ts-node scripts/set-initial-superadmin.ts
+   
+   # HAPUS file key setelah selesai!
+   rm serviceAccountKey.json
+   ```
+
+4. **Deploy Firestore Rules**
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+> ⚠️ **PENTING**: 
+> - Jangan pernah commit `serviceAccountKey.json` ke git!
+> - User perlu logout & login ulang setelah role diubah
+> - Semua perubahan role tercatat di `audit_logs` Firestore
 
 ## Kontribusi
 

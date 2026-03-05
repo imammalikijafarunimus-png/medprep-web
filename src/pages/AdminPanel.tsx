@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { isAdmin } from '../config/admin_list';
+import { hasMinimumRole, ROLE_LABELS } from '../types/auth';
+import { Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Trash2, FileText, 
   HelpCircle, BookOpen, PenTool, Upload, FileJson, 
@@ -99,17 +100,14 @@ export default function AdminDashboard() {
       if (activeTab === 'list' || activeSection === 'users') fetchData(); 
   }, [activeTab, activeSection]);
 
-  // SECURITY CHECK
-  if (!isAdmin(currentUser?.email)) {
-     return (
-         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-black">
-             <div className="text-center">
-                 <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-2">403</h1>
-                 <p className="text-slate-500">Akses ditolak. Anda bukan admin.</p>
-             </div>
-         </div>
-     );
+  // SECURITY CHECK - Use Custom Claims
+  const userRole = currentUser?.role;
+  if (!hasMinimumRole(userRole, 'admin')) {
+     return <Navigate to="/app/dashboard" replace />;
   }
+
+  // Get role label for display
+  const roleLabel = ROLE_LABELS[userRole || 'student'];
 
   // --- ACTIONS ---
 

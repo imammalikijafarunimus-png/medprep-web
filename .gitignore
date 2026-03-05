@@ -33,3 +33,18 @@ npm-debug.log*
 
 # Test coverage
 coverage
+
+# ============================================
+# FIREBASE - SANGAT PENTING!
+# ============================================
+# Service account keys - JANGAN PERNAH COMMIT!
+serviceAccountKey.json
+service-account-key.json
+*.json.key
+
+# Firebase CLI
+.firebase/
+
+# Functions
+functions/lib/
+functions/node_modules/
