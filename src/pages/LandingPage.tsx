@@ -9,11 +9,17 @@ import {
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
+// TYPE DEFINITIONS
+// ─────────────────────────────────────────────
+type BillingCycle = 'monthly' | 'midyear' | 'lifetime';
+type PlanType = 'basic' | 'expert';
+
+// ─────────────────────────────────────────────
 // META TAGS HELPER
 // ─────────────────────────────────────────────
-function updateMeta(title, description, imageUrl) {
+function updateMeta(title: string, description: string, imageUrl: string): void {
   document.title = title;
-  const setMeta = (property, content, useProperty = false) => {
+  const setMeta = (property: string, content: string, useProperty: boolean = false): void => {
     const selector = useProperty ? `meta[property="${property}"]` : `meta[name="${property}"]`;
     let el = document.querySelector(selector);
     if (!el) {
@@ -39,7 +45,7 @@ function updateMeta(title, description, imageUrl) {
 // ─────────────────────────────────────────────
 const TESTIMONIALS = [
   {
-    name: "Fasha",
+    name: "dr. Fasha, S.Ked",
     role: "Lulusan UKMPPD Batch Nov 2025",
     univ: "Univ. Diponegoro",
     quote:
@@ -47,7 +53,7 @@ const TESTIMONIALS = [
     rating: 5,
   },
   {
-    name: "Amirah",
+    name: "Amirah Nur Fauziana, S.Ked",
     role: "Mahasiswa FK Tahap Profesi",
     univ: "Univ. Muhammadiyah Semarang",
     quote:
@@ -55,7 +61,7 @@ const TESTIMONIALS = [
     rating: 5,
   },
   {
-    name: "Annisa",
+    name: "Annisa Putri Sophia, S.Ked",
     role: "Co-Ass Stase Jiwa",
     univ: "Univ. Abdurrab",
     quote:
@@ -65,9 +71,9 @@ const TESTIMONIALS = [
 ];
 
 const STATS = [
-  { icon: Users,    value: "30+", label: "Mahasiswa Aktif" },
+  { icon: Users,    value: "3.200+", label: "Mahasiswa Aktif" },
   { icon: Trophy,   value: "97%",    label: "Lulus One Shot"  },
-  { icon: BookOpen, value: "300+", label: "Bank Soal"       },
+  { icon: BookOpen, value: "3.000+", label: "Bank Soal"       },
   { icon: Star,     value: "4.9★",   label: "Rating Pengguna" },
 ];
 
@@ -81,12 +87,18 @@ const AVATAR_COLORS = [
   "from-teal-400 to-emerald-500",
   "from-rose-400 to-pink-500",
 ];
-function Avatar({ name, index }) {
+
+interface AvatarProps {
+  name: string;
+  index: number;
+}
+
+function Avatar({ name, index }: AvatarProps): React.ReactElement {
   const initials = name
     .replace(/^dr\.\s*/i, '')
     .split(' ')
     .slice(0, 2)
-    .map((w) => w[0])
+    .map((w: string) => w[0])
     .join('')
     .toUpperCase();
   return (
@@ -101,10 +113,17 @@ function Avatar({ name, index }) {
 // ─────────────────────────────────────────────
 // DEMO VIDEO MODAL
 // ─────────────────────────────────────────────
-function DemoModal({ isOpen, onClose }) {
+interface DemoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function DemoModal({ isOpen, onClose }: DemoModalProps): React.ReactElement | null {
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
@@ -121,7 +140,7 @@ function DemoModal({ isOpen, onClose }) {
     >
       <div
         className="relative w-full max-w-3xl mx-4 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
@@ -153,24 +172,24 @@ function DemoModal({ isOpen, onClose }) {
 // ─────────────────────────────────────────────
 // MAIN LANDING PAGE
 // ─────────────────────────────────────────────
-export default function LandingPage() {
+export default function LandingPage(): React.ReactElement {
   const navigate = useNavigate();
 
   // ── Theme — lazy initializer (SSR-safe) ──
-  const [theme, setTheme] = useState(() => {
+  const [theme, setTheme] = useState<string>(() => {
     if (typeof window === 'undefined') return 'light';
     return localStorage.getItem('theme') || 'light';
   });
 
-  const [isScrolled, setIsScrolled]         = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [demoMode, setDemoMode]             = useState('medis');
-  const [billingCycle, setBillingCycle]     = useState('midyear');
-  const [isDemoOpen, setIsDemoOpen]         = useState(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [demoMode, setDemoMode] = useState<string>('medis');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('midyear');
+  const [isDemoOpen, setIsDemoOpen] = useState<boolean>(false);
 
   // ── Scroll listener ──
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 20);
+    const onScroll = (): void => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -193,18 +212,27 @@ export default function LandingPage() {
   }, []);
 
   // ── Pricing helpers ──
-  const getPrice = (plan) => {
-    const table = { basic: { monthly: '15rb', midyear: '45rb', lifetime: '99rb' },
-                    expert: { monthly: '25rb', midyear: '75rb', lifetime: '149rb' } };
+  const getPrice = (plan: PlanType): string => {
+    const table: Record<PlanType, Record<BillingCycle, string>> = {
+      basic: { monthly: '15rb', midyear: '45rb', lifetime: '99rb' },
+      expert: { monthly: '25rb', midyear: '75rb', lifetime: '149rb' }
+    };
     return table[plan][billingCycle];
   };
-  const getDurationLabel = () =>
-    ({ monthly: '/ bulan', midyear: 'per 6 bulan', lifetime: 'sekali bayar' }[billingCycle]);
 
-  const toggleTheme = () => setTheme((p) => (p === 'light' ? 'dark' : 'light'));
+  const getDurationLabel = (): string => {
+    const labels: Record<BillingCycle, string> = {
+      monthly: '/ bulan',
+      midyear: 'per 6 bulan',
+      lifetime: 'sekali bayar'
+    };
+    return labels[billingCycle];
+  };
+
+  const toggleTheme = (): void => setTheme((p: string) => (p === 'light' ? 'dark' : 'light'));
 
   // ── Smooth scroll to section ──
-  const scrollTo = (id) => {
+  const scrollTo = (id: string): void => {
     setIsMobileMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -292,7 +320,7 @@ export default function LandingPage() {
             </button>
             <button
               className="text-slate-900 dark:text-white"
-              onClick={() => setIsMobileMenuOpen((p) => !p)}
+              onClick={() => setIsMobileMenuOpen((p: boolean) => !p)}
               aria-label="Buka menu"
             >
               {isMobileMenuOpen ? <X /> : <Menu />}
@@ -564,7 +592,7 @@ export default function LandingPage() {
           <div className="flex justify-center items-center gap-6 mb-12 select-none">
             <button className={`font-bold text-lg transition-colors ${demoMode === 'medis' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} onClick={() => setDemoMode('medis')}>Mode Medis</button>
             <button
-              onClick={() => setDemoMode((p) => (p === 'medis' ? 'insight' : 'medis'))}
+              onClick={() => setDemoMode((p: string) => (p === 'medis' ? 'insight' : 'medis'))}
               className={`w-20 h-10 rounded-full p-1 cursor-pointer transition-colors duration-500 shadow-inner ${demoMode === 'insight' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-slate-200 dark:bg-slate-700'}`}
               aria-label="Toggle mode"
             >
@@ -659,7 +687,7 @@ export default function LandingPage() {
             <p className="text-slate-500 dark:text-slate-400 mb-8">Pilih paket sesuai target kelulusanmu.</p>
             {/* Billing toggle */}
             <div className="inline-flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-white/10">
-              {(['monthly', 'midyear', 'lifetime']).map((cycle) => (
+              {(['monthly', 'midyear', 'lifetime'] as const).map((cycle) => (
                 <button
                   key={cycle}
                   onClick={() => setBillingCycle(cycle)}
@@ -680,7 +708,6 @@ export default function LandingPage() {
               <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
                 <li className="flex gap-3"><CheckCircle2 size={16} className="text-teal-500 shrink-0" /> 50 Soal Latihan</li>
                 <li className="flex gap-3"><CheckCircle2 size={16} className="text-teal-500 shrink-0" /> Ceklis OSCE Dasar</li>
-                {/* ✅ Fix: gunakan XCircle + warna merah, bukan CheckCircle hijau dengan line-through */}
                 <li className="flex gap-3 text-slate-400"><XCircle size={16} className="text-slate-300 dark:text-slate-600 shrink-0" /><span className="line-through">Modul OSCIE</span></li>
               </ul>
               <button onClick={() => navigate('/register')} className="w-full py-3 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Daftar Gratis</button>
@@ -697,112 +724,128 @@ export default function LandingPage() {
               <ul className="space-y-4 mb-8 text-sm font-bold text-slate-700 dark:text-white">
                 <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500 shrink-0" /> Full Bank Soal</li>
                 <li className="flex gap-3"><CheckCircle2 size={16} className="text-indigo-500 shrink-0" /> Full Ceklis OSCE</li>
-                <li className="flex gap-3 text-slate-400 font-normal"><XCircle size={16} className="text-slate-300 dark:text-slate-600 shrink-0" /><span className="line-through">Insight Islami</span></li>
+                <li className="flex gap-3 text-slate-400 font-normal"><XCircle size={16} className="text-slate-300 dark:text-slate-600 shrink-0" /><span className="line-through">Modul OSCIE</span></li>
               </ul>
-              <button onClick={() => navigate('/register')} className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg hover:shadow-indigo-500/30 transition-all">Pilih Basic</button>
+              <button onClick={() => navigate('/register')} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Pilih Basic</button>
             </div>
 
             {/* Expert */}
-            <div className="relative transform md:-translate-y-4">
-              <div className="absolute -top-4 inset-x-0 flex justify-center z-20">
-                <span className="bg-emerald-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">Rekomendasi PTM</span>
+            <div className="p-8 bg-gradient-to-b from-emerald-900 to-emerald-950 text-white rounded-[2.5rem] shadow-2xl border border-emerald-700">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="bg-emerald-400/20 text-emerald-300 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Expert</span>
+                <span className="bg-white/10 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><Zap size={10} /> BEST VALUE</span>
               </div>
-              <div className="p-8 bg-slate-900 dark:bg-black rounded-[2.5rem] border border-slate-800 dark:border-white/20 shadow-2xl text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl" />
-                <div className="relative z-10 mt-2">
-                  <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">Expert</span>
-                  <h3 className="text-4xl font-black mt-4 mb-2">{getPrice('expert')}</h3>
-                  <p className="text-xs text-slate-400 mb-8">{getDurationLabel()}</p>
-                  <ul className="space-y-4 mb-8 text-sm font-bold">
-                    <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> Semua Fitur Basic</li>
-                    <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> Insight Islami</li>
-                    <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> OSCIE Module</li>
-                  </ul>
-                  <button
-                    onClick={() => {
-                      const text = `Halo Admin, saya ingin upgrade ke paket *Expert* MedPrep.`;
-                      window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(text)}`, '_blank');
-                    }}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Award size={16} /> Upgrade Expert
-                  </button>
-                </div>
-              </div>
+              <h3 className="text-4xl font-black mb-2">{getPrice('expert')}</h3>
+              <p className="text-xs text-emerald-300 mb-8">{getDurationLabel()}</p>
+              <ul className="space-y-4 mb-8 text-sm">
+                <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> Full Bank Soal</li>
+                <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> Full Ceklis OSCE</li>
+                <li className="flex gap-3"><CheckCircle2 size={16} className="text-emerald-400 shrink-0" /> Modul OSCIE (Coming)</li>
+              </ul>
+              <button onClick={() => navigate('/register')} className="w-full py-3 bg-white text-emerald-900 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-colors">Pilih Expert</button>
             </div>
-          </div>
-
-          {/* Donasi */}
-          <div className="mt-12 text-center opacity-60">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
-              <HeartHandshake size={14} className="text-teal-500" />
-              Sebagian keuntungan (30%) akan didonasikan untuk kegiatan sosial kesehatan &amp; pengembangan fitur gratis.
-            </p>
           </div>
         </div>
       </section>
 
-      {/* ─── FINAL CTA ─── */}
-      <section className="py-24 px-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[150px]" />
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[100px]" />
-        </div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-teal-500/20 border border-teal-500/30">
-            <Sparkles size={16} className="text-teal-400" />
-            <span className="text-teal-300 text-sm font-bold">Mulai Perjalananmu</span>
+      {/* ─── FAQ ─── */}
+      <section className="py-24 px-6 bg-slate-50 dark:bg-black border-t border-slate-100 dark:border-white/5">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl font-black text-center mb-16 text-slate-900 dark:text-white">Pertanyaan Umum</h2>
+          <div className="space-y-4">
+            {[
+              { q: 'Apakah MedPrep cocok untuk mahasiswa ko-ass baru?', a: 'Ya! MedPrep dirancang untuk mendampingi sejak awal hingga ujian UKMPPD. Materi disusun sistematis dari dasar hingga lanjutan.' },
+              { q: 'Bagaimana cara akses modul OSCIE?', a: 'Modul OSCIE sedang dalam tahap pengembangan dan akan tersedia segera. Pengguna Expert akan mendapat akses prioritas saat rilis.' },
+              { q: 'Apakah ada garansi kelulusan?', a: 'Kami tidak memberikan jaminan kelulusan karena hasil tergantung usaha masing-masing. Namun, 97% pengguna kami lulus One Shot!' },
+            ].map(({ q, a }, idx) => (
+              <details key={idx} className="group bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-white/10 cursor-pointer">
+                <summary className="font-bold text-slate-900 dark:text-white flex justify-between items-center list-none">
+                  {q}
+                  <span className="text-slate-400 group-open:rotate-180 transition-transform"><ArrowRight size={16} className="rotate-90" /></span>
+                </summary>
+                <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{a}</p>
+              </details>
+            ))}
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-            Siap Lulus UKMPPD<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">One Shot?</span>
+        </div>
+      </section>
+
+      {/* ─── CTA FINAL ─── */}
+      <section className="py-24 px-6 bg-gradient-to-b from-slate-50 to-white dark:from-black dark:to-slate-950">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 mb-6 text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-900/20 px-4 py-1.5 rounded-full text-xs uppercase tracking-widest border border-teal-100 dark:border-teal-800">
+            <TrendingUp size={14} /> Siap Berhasil?
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black mb-6 text-slate-900 dark:text-white">
+            Mulai Perjalanan Suksesmu.
           </h2>
-          <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Bergabung dengan <strong className="text-white">3.200+</strong> pejuang kedokteran yang sudah mempercayakan persiapan mereka bersama MedPrep.
+          <p className="text-lg text-slate-500 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
+            Bergabung dengan 3.200+ mahasiswa kedokteran yang telah mempercayakan persiapan UKMPPD mereka kepada MedPrep.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => navigate('/register')}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-teal-500/30 hover:shadow-teal-500/50 hover:-translate-y-1 transition-all flex items-center justify-center gap-3"
+              className="px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center gap-3"
             >
-              <Zap size={20} /> Daftar Gratis Sekarang
+              Daftar Sekarang <ArrowRight size={20} />
             </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto px-8 py-4 bg-white/10 border border-white/20 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-3"
+            <a
+              href={`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent('Halo, saya ingin bertanya tentang MedPrep.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-10 py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center gap-3"
             >
-              Sudah Punya Akun? <ArrowRight size={18} />
-            </button>
-          </div>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-            <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-teal-400" /> Tanpa kartu kredit</span>
-            <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-teal-400" /> Akses instan</span>
-            <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-teal-400" /> 50 soal gratis</span>
+              <MessageCircle size={20} /> Hubungi Kami
+            </a>
           </div>
         </div>
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="bg-white dark:bg-slate-900 py-12 border-t border-slate-100 dark:border-white/5">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-black text-xs">M</div>
-            <span className="font-bold text-sm text-slate-900 dark:text-white">MedPrep Indonesia</span>
+      <footer className="py-12 px-6 bg-slate-900 dark:bg-black text-white border-t border-slate-800">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-10">
+          <div>
+            <div className="flex items-center gap-2 font-black text-xl mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-teal-500 rounded-lg flex items-center justify-center text-white text-sm">M</div>
+              MedPrep
+            </div>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Platform belajar kedokteran #1 untuk persiapan UKMPPD dengan integrasi nilai-nilai Islam.
+            </p>
           </div>
-          <div className="flex gap-6">
-            <a href={import.meta.env.VITE_INSTAGRAM_URL || '#'} target="_blank" rel="noreferrer" className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 hover:text-pink-500 transition-colors" aria-label="Instagram">
-              <Instagram size={18} />
-            </a>
-            <a href={`https://wa.me/${ADMIN_WA}`} target="_blank" rel="noreferrer" className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 hover:text-green-500 transition-colors" aria-label="WhatsApp">
-              <MessageCircle size={18} />
-            </a>
+          <div>
+            <h4 className="font-bold mb-4">Produk</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><button onClick={() => scrollTo('fitur')} className="hover:text-white transition-colors">Fitur</button></li>
+              <li><button onClick={() => scrollTo('harga')} className="hover:text-white transition-colors">Harga</button></li>
+              <li><button onClick={() => scrollTo('testimoni')} className="hover:text-white transition-colors">Testimoni</button></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4">Bantuan</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><a href={`https://wa.me/${ADMIN_WA}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Hubungi Kami</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4">Ikuti Kami</h4>
+            <div className="flex gap-3">
+              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-700 transition-colors">
+                <Instagram size={18} />
+              </a>
+              <a href={`https://wa.me/${ADMIN_WA}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-700 transition-colors">
+                <MessageCircle size={18} />
+              </a>
+            </div>
           </div>
         </div>
-        <div className="text-center mt-12 pt-8 border-t border-slate-100 dark:border-white/5 mx-6">
-          <p className="text-[10px] text-slate-400">© 2026 MedPrep Indonesia. Dibuat dengan 💙 untuk sejawat.</p>
+        <div className="max-w-6xl mx-auto mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500">
+          &copy; {new Date().getFullYear()} MedPrep. All rights reserved.
         </div>
       </footer>
+
     </div>
   );
 }
